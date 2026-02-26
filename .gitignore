@@ -1,0 +1,12 @@
+# Credentials - NEVER commit these
+.env
+.env.*
+.env.meta-ads
+.mcp.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
