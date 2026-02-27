@@ -6,17 +6,22 @@ Reads JSON data files and generates a self-contained HTML dashboard.
 
 import json
 import os
+import csv
+import subprocess
+import sys
 from datetime import datetime
 from collections import defaultdict
 
 # ── File paths ──────────────────────────────────────────────────────────────
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CAMPAIGN_FILE = os.path.expanduser(
     "~/.claude/projects/-Users-global-Desktop-Meta-Ads/"
     "b503a204-759d-45db-8517-6d1399e45c9a/tool-results/b5297eb.txt"
 )
-DAILY_FILE = os.path.join(os.path.dirname(__file__), "daily_insights.json")
-ADSET_FILE = os.path.join(os.path.dirname(__file__), "adset_insights.json")
-OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "dashboard.html")
+DAILY_FILE = os.path.join(SCRIPT_DIR, "daily_insights.json")
+ADSET_FILE = os.path.join(SCRIPT_DIR, "adset_insights.json")
+VENTAS_FILE = os.path.join(SCRIPT_DIR, "ventas_2026.csv")
+OUTPUT_FILE = os.path.join(SCRIPT_DIR, "dashboard.html")
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -63,11 +68,60 @@ def infer_objective(campaign_name):
     return "OTHER"
 
 
+# ── Auto-sync ventas from Google Sheet ──────────────────────────────────────
+print("Syncing ventas from Google Sheet...")
+try:
+    subprocess.run([sys.executable, os.path.join(SCRIPT_DIR, "sync_ventas.py")],
+                   check=True, cwd=SCRIPT_DIR)
+except Exception as e:
+    print(f"Warning: Could not sync ventas: {e}")
+
+
+def parse_cop_value(val):
+    """Parse COP from Sheet format: $45.626.500 -> 45626500"""
+    s = val.strip().replace('$', '').replace('.', '').replace(',', '.')
+    try:
+        return float(s)
+    except:
+        return 0
+
+
+def load_ventas(path):
+    """Load and process ventas CSV from Google Sheet."""
+    if not os.path.exists(path):
+        print(f"Warning: {path} not found. Run sync_ventas.py first.")
+        return []
+    with open(path, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        header = next(reader)
+        rows = []
+        for r in reader:
+            if len(r) < 13 or not r[0].strip():
+                continue
+            rows.append({
+                'mes': r[0].strip(),
+                'nombre': r[1].strip(),
+                'asesor': r[2].strip(),
+                'lote': r[3].strip(),
+                'dia_contacto': r[4].strip(),
+                'dia_cierre': r[5].strip(),
+                'dias_cierre': int(r[6].strip()) if r[6].strip().isdigit() else None,
+                'fuente': r[7].strip(),
+                'campana': r[8].strip(),
+                'conjunto': r[9].strip(),
+                'anuncio': r[10].strip(),
+                'tipo_campana': r[11].strip(),
+                'precio': parse_cop_value(r[12]),
+            })
+    return rows
+
+
 # ── Load data ───────────────────────────────────────────────────────────────
 print("Loading data files...")
 campaign_raw = load_json(CAMPAIGN_FILE)
 daily_raw = load_json(DAILY_FILE)
 adset_raw = load_json(ADSET_FILE)
+ventas_raw = load_ventas(VENTAS_FILE)
 
 # ── Process campaign-level (30-day aggregate) ───────────────────────────────
 campaigns = []
@@ -226,6 +280,105 @@ for a in adset_raw["data"]:
 
 adsets.sort(key=lambda x: x["spend"], reverse=True)
 
+# ── Process Ventas Data ─────────────────────────────────────────────────────
+print("Processing ventas data...")
+
+# All ventas
+ventas_total_count = len(ventas_raw)
+ventas_total_revenue = sum(v['precio'] for v in ventas_raw)
+
+# By source
+ventas_by_source = defaultdict(lambda: {'count': 0, 'revenue': 0})
+for v in ventas_raw:
+    src = v['fuente']
+    if src:
+        ventas_by_source[src]['count'] += 1
+        ventas_by_source[src]['revenue'] += v['precio']
+
+# META ventas only
+meta_ventas = [v for v in ventas_raw if v['fuente'] == 'META']
+meta_ventas_count = len(meta_ventas)
+meta_ventas_revenue = sum(v['precio'] for v in meta_ventas)
+meta_avg_ticket = meta_ventas_revenue / meta_ventas_count if meta_ventas_count else 0
+
+# Days to close (META only)
+meta_dias = [v['dias_cierre'] for v in meta_ventas if v['dias_cierre'] is not None]
+meta_avg_dias = sum(meta_dias) / len(meta_dias) if meta_dias else 0
+meta_median_dias = sorted(meta_dias)[len(meta_dias)//2] if meta_dias else 0
+
+# ROAS calculation: META revenue / META Ads spend
+roas = meta_ventas_revenue / total_spend if total_spend > 0 else 0
+
+# By month
+ventas_by_month = defaultdict(lambda: {'total': 0, 'revenue': 0, 'meta': 0, 'meta_revenue': 0})
+for v in ventas_raw:
+    m = v['mes']
+    ventas_by_month[m]['total'] += 1
+    ventas_by_month[m]['revenue'] += v['precio']
+    if v['fuente'] == 'META':
+        ventas_by_month[m]['meta'] += 1
+        ventas_by_month[m]['meta_revenue'] += v['precio']
+
+# Top campaigns by sales (normalize name for matching)
+def normalize_camp_name(name):
+    return name.strip().lower().replace('  ', ' ')
+
+meta_ventas_by_campaign = defaultdict(lambda: {'count': 0, 'revenue': 0})
+for v in meta_ventas:
+    cn = normalize_camp_name(v['campana'])
+    if cn:
+        meta_ventas_by_campaign[cn]['count'] += 1
+        meta_ventas_by_campaign[cn]['revenue'] += v['precio']
+
+# Top asesores
+meta_ventas_by_asesor = defaultdict(lambda: {'count': 0, 'revenue': 0})
+for v in meta_ventas:
+    name = v['nombre']
+    if name and name != 'INMOBILIARIA':
+        meta_ventas_by_asesor[name]['count'] += 1
+        meta_ventas_by_asesor[name]['revenue'] += v['precio']
+
+# Top creativos (anuncios)
+meta_ventas_by_creative = defaultdict(lambda: {'count': 0, 'revenue': 0})
+for v in meta_ventas:
+    ad = v['anuncio']
+    if ad:
+        meta_ventas_by_creative[ad]['count'] += 1
+        meta_ventas_by_creative[ad]['revenue'] += v['precio']
+
+# Cross-reference: campaign spend vs revenue (ROAS per campaign)
+campaign_roas = []
+for c in campaigns:
+    cn = normalize_camp_name(c['name'])
+    vdata = meta_ventas_by_campaign.get(cn, {'count': 0, 'revenue': 0})
+    camp_roas = vdata['revenue'] / c['spend'] if c['spend'] > 0 else 0
+    campaign_roas.append({
+        'name': c['name'],
+        'spend': c['spend'],
+        'leads': c['leads'],
+        'ventas': vdata['count'],
+        'revenue': vdata['revenue'],
+        'roas': camp_roas,
+        'conversion_rate': (vdata['count'] / c['leads'] * 100) if c['leads'] > 0 else 0,
+        'cost_per_sale': c['spend'] / vdata['count'] if vdata['count'] > 0 else 0,
+    })
+
+campaign_roas.sort(key=lambda x: x['revenue'], reverse=True)
+
+# Source chart data
+source_labels = []
+source_counts = []
+source_revenues = []
+for src, data in sorted(ventas_by_source.items(), key=lambda x: -x[1]['revenue']):
+    source_labels.append(src)
+    source_counts.append(data['count'])
+    source_revenues.append(data['revenue'])
+
+print(f"  Ventas totales: {ventas_total_count}")
+print(f"  Ventas META: {meta_ventas_count}")
+print(f"  Revenue META: ${meta_ventas_revenue:,.0f} COP")
+print(f"  ROAS META: {roas:.1f}x")
+
 # ── Objective distribution (spend) ──────────────────────────────────────────
 obj_spend = defaultdict(float)
 for c in campaigns:
@@ -331,6 +484,85 @@ def build_adset_rows():
             <td class="num {cpl_class}">{cpl_display}</td>
             <td class="num">{a['link_clicks']:,}</td>
             <td class="num">{a['video_views']:,}</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+def build_ventas_source_rows():
+    """Build rows for the source attribution table."""
+    rows = []
+    for src, data in sorted(ventas_by_source.items(), key=lambda x: -x[1]['revenue']):
+        pct_count = (data['count'] / ventas_total_count * 100) if ventas_total_count else 0
+        pct_rev = (data['revenue'] / ventas_total_revenue * 100) if ventas_total_revenue else 0
+        rev_display = f"${data['revenue']:,.0f}".replace(",", ".")
+        color = '#4361ee' if src == 'META' else '#8892b0'
+        rows.append(f"""<tr>
+            <td style="font-weight:600; color:{color}">{src}</td>
+            <td class="num">{data['count']}</td>
+            <td class="num">{pct_count:.1f}%</td>
+            <td class="num">{rev_display}</td>
+            <td class="num">{pct_rev:.1f}%</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+def build_campaign_roas_rows():
+    """Build rows for the campaign ROAS cross-reference table."""
+    rows = []
+    for cr in campaign_roas:
+        if cr['spend'] == 0:
+            continue
+        spend_d = f"${cr['spend']:,.0f}".replace(",", ".")
+        rev_d = f"${cr['revenue']:,.0f}".replace(",", ".") if cr['revenue'] > 0 else "-"
+        roas_d = f"{cr['roas']:.1f}x" if cr['roas'] > 0 else "-"
+        conv_d = f"{cr['conversion_rate']:.1f}%" if cr['conversion_rate'] > 0 else "-"
+        cps_d = f"${cr['cost_per_sale']:,.0f}".replace(",", ".") if cr['cost_per_sale'] > 0 else "-"
+        
+        roas_class = ""
+        if cr['roas'] >= 5:
+            roas_class = "cpl-low"
+        elif cr['roas'] >= 2:
+            roas_class = "cpl-mid"
+        elif cr['roas'] > 0:
+            roas_class = "cpl-high"
+        
+        rows.append(f"""<tr>
+            <td class="campaign-name">{cr['name']}</td>
+            <td class="num">{spend_d}</td>
+            <td class="num">{cr['leads']}</td>
+            <td class="num" style="font-weight:700">{cr['ventas']}</td>
+            <td class="num">{conv_d}</td>
+            <td class="num">{rev_d}</td>
+            <td class="num {roas_class}" style="font-weight:700">{roas_d}</td>
+            <td class="num">{cps_d}</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+def build_asesor_rows():
+    """Build rows for asesores table."""
+    rows = []
+    for name, data in sorted(meta_ventas_by_asesor.items(), key=lambda x: -x[1]['revenue']):
+        rev_d = f"${data['revenue']:,.0f}".replace(",", ".")
+        avg_d = f"${data['revenue']/data['count']:,.0f}".replace(",", ".") if data['count'] else "-"
+        rows.append(f"""<tr>
+            <td style="font-weight:600">{name}</td>
+            <td class="num">{data['count']}</td>
+            <td class="num">{rev_d}</td>
+            <td class="num">{avg_d}</td>
+        </tr>""")
+    return "\n".join(rows)
+
+
+def build_creative_ventas_rows():
+    """Build rows for creative performance by actual sales."""
+    rows = []
+    for ad, data in sorted(meta_ventas_by_creative.items(), key=lambda x: -x[1]['count'])[:12]:
+        rev_d = f"${data['revenue']:,.0f}".replace(",", ".")
+        rows.append(f"""<tr>
+            <td style="font-weight:600">{ad}</td>
+            <td class="num">{data['count']}</td>
+            <td class="num">{rev_d}</td>
         </tr>""")
     return "\n".join(rows)
 
@@ -907,6 +1139,157 @@ tbody tr:hover {{
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- VENTAS REALES & ROAS SECTION                          -->
+<!-- ══════════════════════════════════════════════════════ -->
+
+<!-- VENTAS KPI CARDS -->
+<div class="section">
+    <div class="section-title"><span class="icon">&#128176;</span> Ventas Reales &mdash; Cierre de Campanas (Google Sheet)</div>
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="kpi-card animate-in" style="border: 1px solid rgba(0,212,170,0.3);">
+            <span class="kpi-icon">&#127942;</span>
+            <div class="kpi-label">ROAS META</div>
+            <div class="kpi-value" style="color: {'var(--accent-cyan)' if roas >= 3 else 'var(--accent-orange)' if roas >= 1 else 'var(--accent-red)'};">{roas:.1f}x</div>
+            <div class="kpi-sub">Revenue / Inversion Ads</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#128181;</span>
+            <div class="kpi-label">Revenue META</div>
+            <div class="kpi-value">{fmt_cop(meta_ventas_revenue)}</div>
+            <div class="kpi-sub">{meta_ventas_count} lotes vendidos via Meta</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#128200;</span>
+            <div class="kpi-label">Revenue Total</div>
+            <div class="kpi-value">{fmt_cop(ventas_total_revenue)}</div>
+            <div class="kpi-sub">{ventas_total_count} ventas todas las fuentes</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#127968;</span>
+            <div class="kpi-label">Ticket Promedio</div>
+            <div class="kpi-value">{fmt_cop(meta_avg_ticket)}</div>
+            <div class="kpi-sub">Precio prom. lote (META)</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#9201;</span>
+            <div class="kpi-label">Dias para Cierre</div>
+            <div class="kpi-value">{meta_median_dias} dias</div>
+            <div class="kpi-sub">Mediana ({meta_avg_dias:.1f} promedio)</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#128178;</span>
+            <div class="kpi-label">Costo por Venta</div>
+            <div class="kpi-value">{fmt_cop(total_spend / meta_ventas_count) if meta_ventas_count else '$0'}</div>
+            <div class="kpi-sub">Inversion Ads / Ventas META</div>
+        </div>
+    </div>
+</div>
+
+<!-- VENTAS BY SOURCE CHART + TABLE -->
+<div class="chart-grid">
+    <div class="section">
+        <div class="section-title"><span class="icon">&#128202;</span> Ventas por Fuente</div>
+        <div class="chart-container">
+            <canvas id="sourceChart" height="280"></canvas>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-title"><span class="icon">&#128203;</span> Atribucion de Ventas</div>
+        <div class="table-wrapper" style="margin-bottom: 0;">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fuente</th>
+                            <th>Ventas</th>
+                            <th>% Ventas</th>
+                            <th>Revenue</th>
+                            <th>% Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {build_ventas_source_rows()}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CAMPAIGN ROAS TABLE -->
+<div class="section">
+    <div class="section-title"><span class="icon">&#128176;</span> ROAS por Campana &mdash; Cruce Spend vs Ventas Reales</div>
+    <div class="table-wrapper">
+        <div class="table-scroll">
+            <table id="roasTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('roasTable', 0, 'str')">Campana <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 1, 'num')">Inversion <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 2, 'num')">Leads <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 3, 'num')">Ventas <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 4, 'num')">Conv. Rate <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 5, 'num')">Revenue <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 6, 'num')">ROAS <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 7, 'num')">Costo/Venta <span class="sort-icon">&#8645;</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {build_campaign_roas_rows()}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ASESORES + CREATIVOS -->
+<div class="chart-grid">
+    <div class="section">
+        <div class="section-title"><span class="icon">&#128100;</span> Asesores &mdash; Ventas META</div>
+        <div class="table-wrapper" style="margin-bottom: 0;">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Asesor</th>
+                            <th>Ventas</th>
+                            <th>Revenue</th>
+                            <th>Ticket Prom.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {build_asesor_rows()}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-title"><span class="icon">&#127912;</span> Creativos que Venden &mdash; META</div>
+        <div class="table-wrapper" style="margin-bottom: 0;">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Anuncio/Creativo</th>
+                            <th>Ventas</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {build_creative_ventas_rows()}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- META ADS PERFORMANCE (Original Sections)              -->
+<!-- ══════════════════════════════════════════════════════ -->
+
 <!-- DAILY SPEND & LEADS CHART -->
 <div class="section">
     <div class="section-title"><span class="icon">&#128200;</span> Inversion Diaria y Leads</div>
@@ -1016,8 +1399,8 @@ tbody tr:hover {{
 
 <!-- FOOTER -->
 <div class="footer">
-    Los Lagos Condominio &mdash; Dashboard Meta Ads &mdash; Generado automaticamente el {now_str}<br>
-    Datos de Meta Ads API &bull; Cuenta: act_1089998585939349 &bull; Moneda: COP (Pesos Colombianos)
+    Los Lagos Condominio &mdash; Dashboard Meta Ads + Ventas Reales &mdash; Generado automaticamente el {now_str}<br>
+    Datos de Meta Ads API &bull; Ventas: Google Sheet (Cierre Campanas) &bull; Cuenta: act_1089998585939349 &bull; COP
 </div>
 
 </div><!-- /container -->
@@ -1027,6 +1410,87 @@ tbody tr:hover {{
 Chart.defaults.color = '#8892b0';
 Chart.defaults.borderColor = 'rgba(42, 42, 74, 0.5)';
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+
+// ── VENTAS POR FUENTE CHART ────────────────────────────
+const sourceLabels = {json.dumps(source_labels)};
+const sourceCounts = {json.dumps(source_counts)};
+const sourceRevenues = {json.dumps(source_revenues)};
+
+new Chart(document.getElementById('sourceChart'), {{
+    type: 'bar',
+    data: {{
+        labels: sourceLabels,
+        datasets: [
+            {{
+                label: 'Ventas (#)',
+                data: sourceCounts,
+                backgroundColor: [
+                    'rgba(67, 97, 238, 0.7)',
+                    'rgba(0, 212, 170, 0.7)',
+                    'rgba(123, 47, 247, 0.7)',
+                    'rgba(255, 159, 67, 0.7)',
+                    'rgba(255, 107, 157, 0.7)',
+                    'rgba(255, 107, 107, 0.7)',
+                    'rgba(100, 100, 150, 0.7)'
+                ],
+                borderColor: [
+                    '#4361ee', '#00d4aa', '#7b2ff7', '#ff9f43', '#ff6b9d', '#ff6b6b', '#6464a0'
+                ],
+                borderWidth: 2,
+                borderRadius: 6,
+                yAxisID: 'y'
+            }},
+            {{
+                label: 'Revenue (COP)',
+                data: sourceRevenues,
+                type: 'line',
+                borderColor: '#00d4aa',
+                backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#00d4aa',
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                tension: 0.3,
+                yAxisID: 'y1'
+            }}
+        ]
+    }},
+    options: {{
+        responsive: true,
+        interaction: {{ mode: 'index', intersect: false }},
+        plugins: {{
+            legend: {{ labels: {{ usePointStyle: true, padding: 16 }} }},
+            tooltip: {{
+                backgroundColor: 'rgba(15, 15, 26, 0.95)',
+                borderColor: 'rgba(67, 97, 238, 0.3)',
+                borderWidth: 1,
+                padding: 12,
+                callbacks: {{
+                    label: function(ctx) {{
+                        if (ctx.dataset.yAxisID === 'y1') {{
+                            return 'Revenue: $' + (ctx.parsed.y / 1000000).toFixed(0) + 'M';
+                        }}
+                        return ctx.dataset.label + ': ' + ctx.parsed.y;
+                    }}
+                }}
+            }}
+        }},
+        scales: {{
+            y: {{
+                position: 'left',
+                title: {{ display: true, text: '# Ventas', font: {{ weight: '600' }} }},
+                grid: {{ color: 'rgba(42, 42, 74, 0.3)' }}
+            }},
+            y1: {{
+                position: 'right',
+                title: {{ display: true, text: 'Revenue (COP)', font: {{ weight: '600' }} }},
+                ticks: {{ callback: v => '$' + (v/1000000).toFixed(0) + 'M' }},
+                grid: {{ drawOnChartArea: false }}
+            }},
+            x: {{ grid: {{ color: 'rgba(42, 42, 74, 0.2)' }} }}
+        }}
+    }}
+}});
 
 const dailyLabels = {json.dumps(daily_labels)};
 const dailySpend = {json.dumps(daily_spend)};

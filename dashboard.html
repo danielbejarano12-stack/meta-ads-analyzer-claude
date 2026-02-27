@@ -453,161 +453,6 @@ tbody tr:hover {
     .container { padding: 12px; }
 }
 
-/* ── DATE FILTER ──────────────────────────────────────── */
-.date-filter-bar {
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 18px 24px;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    animation: fadeInUp 0.5s ease forwards;
-}
-.date-filter-bar .filter-label {
-    color: var(--text-secondary);
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.date-filter-bar input[type="date"] {
-    background: var(--bg-card-alt);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.date-filter-bar input[type="date"]:focus {
-    outline: none;
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px rgba(67,97,238,0.15);
-}
-.date-filter-bar input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.7);
-    cursor: pointer;
-}
-.date-presets {
-    display: flex;
-    gap: 8px;
-    margin-left: 8px;
-}
-.date-presets .preset-btn {
-    background: var(--bg-card-alt);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 7px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
-}
-.date-presets .preset-btn:hover {
-    border-color: var(--accent-blue);
-    color: var(--accent-blue);
-    background: rgba(67,97,238,0.08);
-}
-.date-presets .preset-btn.active {
-    background: var(--accent-blue);
-    color: #fff;
-    border-color: var(--accent-blue);
-    box-shadow: 0 2px 12px rgba(67,97,238,0.3);
-}
-.filter-separator {
-    width: 1px;
-    height: 28px;
-    background: var(--border-color);
-    margin: 0 4px;
-}
-.filter-date-sep {
-    color: var(--text-muted);
-    font-size: 13px;
-}
-
-/* ── ANALYSIS SECTION ────────────────────────────────── */
-.analysis-section {
-    margin-bottom: 36px;
-    animation: fadeInUp 0.6s ease forwards;
-}
-.analysis-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
-}
-.analysis-card {
-    background: var(--bg-card);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border-color);
-    position: relative;
-    overflow: hidden;
-}
-.analysis-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-}
-.analysis-card.positive::before { background: linear-gradient(90deg, #00d4aa, #4361ee); }
-.analysis-card.warning::before { background: linear-gradient(90deg, #ff9f43, #ff6b9d); }
-.analysis-card.recommend::before { background: linear-gradient(90deg, #4361ee, #7b2ff7); }
-.analysis-card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-}
-.analysis-card-header .analysis-icon {
-    font-size: 24px;
-}
-.analysis-card-header h3 {
-    font-size: 16px;
-    font-weight: 700;
-}
-.analysis-card.positive h3 { color: var(--accent-cyan); }
-.analysis-card.warning h3 { color: var(--accent-orange); }
-.analysis-card.recommend h3 { color: var(--accent-blue); }
-.analysis-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 12px;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-secondary);
-}
-.analysis-item:last-child { margin-bottom: 0; }
-.analysis-bullet {
-    flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-top: 7px;
-}
-.analysis-card.positive .analysis-bullet { background: var(--accent-cyan); }
-.analysis-card.warning .analysis-bullet { background: var(--accent-orange); }
-.analysis-card.recommend .analysis-bullet { background: var(--accent-blue); }
-.analysis-highlight {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-@media (max-width: 1000px) {
-    .analysis-grid { grid-template-columns: 1fr; }
-}
-
 /* ── FOOTER ───────────────────────────────────────────── */
 .footer {
     text-align: center;
@@ -631,26 +476,12 @@ tbody tr:hover {
         </div>
         <div class="header-right">
             <div class="date-range">28 Ene 2026 &mdash; 26 Feb 2026</div>
-            <div class="updated">Ultima actualizacion: 27/02/2026 10:09</div>
+            <div class="updated">Ultima actualizacion: 27/02/2026 11:24</div>
         </div>
     </div>
 </div>
 
 <div class="container">
-
-<!-- DATE FILTER -->
-<div class="date-filter-bar">
-    <div class="filter-label">&#128197; Filtrar por fecha</div>
-    <input type="date" id="dateFrom" value="2026-01-28" min="2026-01-28" max="2026-02-26">
-    <span class="filter-date-sep">a</span>
-    <input type="date" id="dateTo" value="2026-02-26" min="2026-01-28" max="2026-02-26">
-    <div class="filter-separator"></div>
-    <div class="date-presets">
-        <button class="preset-btn" onclick="setPreset(7)">7 dias</button>
-        <button class="preset-btn" onclick="setPreset(14)">14 dias</button>
-        <button class="preset-btn active" onclick="setPreset(30)">30 dias</button>
-    </div>
-</div>
 
 <!-- KPI CARDS -->
 <div class="kpi-grid">
@@ -704,78 +535,503 @@ tbody tr:hover {
     </div>
 </div>
 
-<!-- QUICK ANALYSIS -->
-<div class="analysis-section">
-    <div class="section-title"><span class="icon">&#129504;</span> Analisis Rapido</div>
-    <div class="analysis-grid">
-        <div class="analysis-card positive">
-            <div class="analysis-card-header">
-                <span class="analysis-icon">&#9989;</span>
-                <h3>Lo Positivo</h3>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span><span class="analysis-highlight">1,672 leads</span> en 30 dias con un CPL promedio de <span class="analysis-highlight">$5,729 COP</span> (~$1.30 USD) &mdash; altamente eficiente para el sector inmobiliario</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span><span class="analysis-highlight">CTR del 3.30%</span> &mdash; excelente, muy por encima del promedio del sector real estate (0.9%-1.5%)</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span>Alta interaccion organica: <span class="analysis-highlight">381K engagements</span>, <span class="analysis-highlight">345K video views</span> y 902 conexiones de mensajeria</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span>Las campanas de <span class="analysis-highlight">febrero 2026</span> (VIDEOS_FORM PREG, VIDEOSESTRATEGY) logran CPLs de $3,485-$3,676 &mdash; los mas bajos de la cuenta</span>
-            </div>
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- VENTAS REALES & ROAS SECTION                          -->
+<!-- ══════════════════════════════════════════════════════ -->
+
+<!-- VENTAS KPI CARDS -->
+<div class="section">
+    <div class="section-title"><span class="icon">&#128176;</span> Ventas Reales &mdash; Cierre de Campanas (Google Sheet)</div>
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="kpi-card animate-in" style="border: 1px solid rgba(0,212,170,0.3);">
+            <span class="kpi-icon">&#127942;</span>
+            <div class="kpi-label">ROAS META</div>
+            <div class="kpi-value" style="color: var(--accent-cyan);">136.9x</div>
+            <div class="kpi-sub">Revenue / Inversion Ads</div>
         </div>
-        <div class="analysis-card warning">
-            <div class="analysis-card-header">
-                <span class="analysis-icon">&#9888;&#65039;</span>
-                <h3>A Vigilar</h3>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span><span class="analysis-highlight">14+ campanas activas simultaneas</span> &mdash; riesgo alto de <span class="analysis-highlight">Auction Overlap</span> (tus propios anuncios compiten entre si en la subasta)</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span>Frecuencia de <span class="analysis-highlight">2.62</span> &mdash; aceptable pero en tendencia alcista. Monitorear fatiga creativa si supera 3.0</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span>CPM en tendencia alcista: paso de <span class="analysis-highlight">$5,145</span> a <span class="analysis-highlight">$7,598</span> (+47%) en 30 dias, lo que encarece los leads</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span>La campana <span class="analysis-highlight">RECON_MENSAJESIG</span> tiene un CPL de $298,914 con solo 1 lead &mdash; no esta optimizada para generacion de leads</span>
-            </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#128181;</span>
+            <div class="kpi-label">Revenue META</div>
+            <div class="kpi-value">$1.311.468.800</div>
+            <div class="kpi-sub">34 lotes vendidos via Meta</div>
         </div>
-        <div class="analysis-card recommend">
-            <div class="analysis-card-header">
-                <span class="analysis-icon">&#128161;</span>
-                <h3>Recomendaciones</h3>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span><span class="analysis-highlight">Consolidar campanas:</span> Reducir de 14 a 4-5 campanas activas para evitar auction overlap y dar mas senales al algoritmo</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span><span class="analysis-highlight">Escalar las ganadoras:</span> Las campanas con CPL bajo ($3,400-$3,700) deben recibir mas presupuesto antes de lanzar nuevas</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span><span class="analysis-highlight">Probar bid caps:</span> Todas usan Lowest Cost sin cap. Un bid cap de $6,000 COP ayudaria a controlar el CPL maximo</span>
-            </div>
-            <div class="analysis-item">
-                <span class="analysis-bullet"></span>
-                <span><span class="analysis-highlight">Renovar creativos:</span> Con CPM subiendo +47%, los creativos pueden estar en fatiga. Rotar anuncios cada 2-3 semanas</span>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#128200;</span>
+            <div class="kpi-label">Revenue Total</div>
+            <div class="kpi-value">$3.648.250.552</div>
+            <div class="kpi-sub">163 ventas todas las fuentes</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#127968;</span>
+            <div class="kpi-label">Ticket Promedio</div>
+            <div class="kpi-value">$38.572.612</div>
+            <div class="kpi-sub">Precio prom. lote (META)</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#9201;</span>
+            <div class="kpi-label">Dias para Cierre</div>
+            <div class="kpi-value">6 dias</div>
+            <div class="kpi-sub">Mediana (9.3 promedio)</div>
+        </div>
+        <div class="kpi-card animate-in">
+            <span class="kpi-icon">&#128178;</span>
+            <div class="kpi-label">Costo por Venta</div>
+            <div class="kpi-value">$281.755</div>
+            <div class="kpi-sub">Inversion Ads / Ventas META</div>
+        </div>
+    </div>
+</div>
+
+<!-- VENTAS BY SOURCE CHART + TABLE -->
+<div class="chart-grid">
+    <div class="section">
+        <div class="section-title"><span class="icon">&#128202;</span> Ventas por Fuente</div>
+        <div class="chart-container">
+            <canvas id="sourceChart" height="280"></canvas>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-title"><span class="icon">&#128203;</span> Atribucion de Ventas</div>
+        <div class="table-wrapper" style="margin-bottom: 0;">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fuente</th>
+                            <th>Ventas</th>
+                            <th>% Ventas</th>
+                            <th>Revenue</th>
+                            <th>% Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+            <td style="font-weight:600; color:#4361ee">META</td>
+            <td class="num">34</td>
+            <td class="num">20.9%</td>
+            <td class="num">$1.311.468.800</td>
+            <td class="num">35.9%</td>
+        </tr>
+<tr>
+            <td style="font-weight:600; color:#8892b0">REFERIDO</td>
+            <td class="num">36</td>
+            <td class="num">22.1%</td>
+            <td class="num">$1.068.158.100</td>
+            <td class="num">29.3%</td>
+        </tr>
+<tr>
+            <td style="font-weight:600; color:#8892b0">TIKTOK</td>
+            <td class="num">18</td>
+            <td class="num">11.0%</td>
+            <td class="num">$711.030.200</td>
+            <td class="num">19.5%</td>
+        </tr>
+<tr>
+            <td style="font-weight:600; color:#8892b0">GOOGLE ADS</td>
+            <td class="num">11</td>
+            <td class="num">6.7%</td>
+            <td class="num">$367.583.452</td>
+            <td class="num">10.1%</td>
+        </tr>
+<tr>
+            <td style="font-weight:600; color:#8892b0">PROYECTO</td>
+            <td class="num">2</td>
+            <td class="num">1.2%</td>
+            <td class="num">$96.250.000</td>
+            <td class="num">2.6%</td>
+        </tr>
+<tr>
+            <td style="font-weight:600; color:#8892b0">MERCADO ORGANICO ASESOR</td>
+            <td class="num">3</td>
+            <td class="num">1.8%</td>
+            <td class="num">$93.760.000</td>
+            <td class="num">2.6%</td>
+        </tr>
+<tr>
+            <td style="font-weight:600; color:#8892b0">INMOBILIARIA</td>
+            <td class="num">58</td>
+            <td class="num">35.6%</td>
+            <td class="num">$0</td>
+            <td class="num">0.0%</td>
+        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
+<!-- CAMPAIGN ROAS TABLE -->
+<div class="section">
+    <div class="section-title"><span class="icon">&#128176;</span> ROAS por Campana &mdash; Cruce Spend vs Ventas Reales</div>
+    <div class="table-wrapper">
+        <div class="table-scroll">
+            <table id="roasTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('roasTable', 0, 'str')">Campana <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 1, 'num')">Inversion <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 2, 'num')">Leads <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 3, 'num')">Ventas <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 4, 'num')">Conv. Rate <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 5, 'num')">Revenue <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 6, 'num')">ROAS <span class="sort-icon">&#8645;</span></th>
+                        <th onclick="sortTable('roasTable', 7, 'num')">Costo/Venta <span class="sort-icon">&#8645;</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+            <td class="campaign-name">18/11/25_CP_PRUEBACA_FORM</td>
+            <td class="num">$2.650.900</td>
+            <td class="num">323</td>
+            <td class="num" style="font-weight:700">11</td>
+            <td class="num">3.4%</td>
+            <td class="num">$510.951.600</td>
+            <td class="num cpl-low" style="font-weight:700">192.7x</td>
+            <td class="num">$240.991</td>
+        </tr>
+<tr>
+            <td class="campaign-name">07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM</td>
+            <td class="num">$1.705.214</td>
+            <td class="num">345</td>
+            <td class="num" style="font-weight:700">4</td>
+            <td class="num">1.2%</td>
+            <td class="num">$203.846.000</td>
+            <td class="num cpl-low" style="font-weight:700">119.5x</td>
+            <td class="num">$426.304</td>
+        </tr>
+<tr>
+            <td class="campaign-name">20/10/25_CP_EVENTO26OCT_FORM</td>
+            <td class="num">$1.548.236</td>
+            <td class="num">401</td>
+            <td class="num" style="font-weight:700">4</td>
+            <td class="num">1.0%</td>
+            <td class="num">$200.850.400</td>
+            <td class="num cpl-low" style="font-weight:700">129.7x</td>
+            <td class="num">$387.059</td>
+        </tr>
+<tr>
+            <td class="campaign-name">28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1</td>
+            <td class="num">$35.224</td>
+            <td class="num">4</td>
+            <td class="num" style="font-weight:700">2</td>
+            <td class="num">50.0%</td>
+            <td class="num">$98.399.600</td>
+            <td class="num cpl-low" style="font-weight:700">2793.5x</td>
+            <td class="num">$17.612</td>
+        </tr>
+<tr>
+            <td class="campaign-name">CP_24/07/2025_VIDEOSCOOL_FORM</td>
+            <td class="num">$35.478</td>
+            <td class="num">8</td>
+            <td class="num" style="font-weight:700">1</td>
+            <td class="num">12.5%</td>
+            <td class="num">$50.880.000</td>
+            <td class="num cpl-low" style="font-weight:700">1434.1x</td>
+            <td class="num">$35.478</td>
+        </tr>
+<tr>
+            <td class="campaign-name">19/12/25_CP_VIDEOSNEWSDIC_FORM</td>
+            <td class="num">$19.715</td>
+            <td class="num">7</td>
+            <td class="num" style="font-weight:700">1</td>
+            <td class="num">14.3%</td>
+            <td class="num">$47.880.000</td>
+            <td class="num cpl-low" style="font-weight:700">2428.6x</td>
+            <td class="num">$19.715</td>
+        </tr>
+<tr>
+            <td class="campaign-name">26/03/25 FORM META PRUEBAS</td>
+            <td class="num">$691.053</td>
+            <td class="num">144</td>
+            <td class="num" style="font-weight:700">3</td>
+            <td class="num">2.1%</td>
+            <td class="num">$47.700.000</td>
+            <td class="num cpl-low" style="font-weight:700">69.0x</td>
+            <td class="num">$230.351</td>
+        </tr>
+<tr>
+            <td class="campaign-name">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
+            <td class="num">$441.074</td>
+            <td class="num">120</td>
+            <td class="num" style="font-weight:700">1</td>
+            <td class="num">0.8%</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">$441.074</td>
+        </tr>
+<tr>
+            <td class="campaign-name">29/10/25_GENERALOCT_FORM</td>
+            <td class="num">$395.241</td>
+            <td class="num">80</td>
+            <td class="num" style="font-weight:700">4</td>
+            <td class="num">5.0%</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">$98.810</td>
+        </tr>
+<tr>
+            <td class="campaign-name">31/10/25_RECON_MENSAJESIG</td>
+            <td class="num">$298.914</td>
+            <td class="num">1</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">31/10/25_TRAF_IG</td>
+            <td class="num">$297.922</td>
+            <td class="num">0</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">22/11/25_TRAFGRAL_WEB</td>
+            <td class="num">$293.801</td>
+            <td class="num">0</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">14/01/26_CP_VIDEOSENE_FORM</td>
+            <td class="num">$288.372</td>
+            <td class="num">54</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
+            <td class="num">$260.195</td>
+            <td class="num">33</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">08/02/26_CP_VIDEOS_FORM PREG</td>
+            <td class="num">$181.215</td>
+            <td class="num">52</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">13/02/26_CP_2PREGU_FORM</td>
+            <td class="num">$136.260</td>
+            <td class="num">28</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">28/11/25_CP_GENERALNOV_FORM</td>
+            <td class="num">$104.179</td>
+            <td class="num">27</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">24/09/2025_CP_VIDEOSSEPT_FORM</td>
+            <td class="num">$103.311</td>
+            <td class="num">26</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">24/02/26_CP_1CA1A_FORM</td>
+            <td class="num">$74.358</td>
+            <td class="num">17</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+<tr>
+            <td class="campaign-name">24/02/26_CP_BESTSELLER_FORMVERIF</td>
+            <td class="num">$19.012</td>
+            <td class="num">2</td>
+            <td class="num" style="font-weight:700">0</td>
+            <td class="num">-</td>
+            <td class="num">-</td>
+            <td class="num " style="font-weight:700">-</td>
+            <td class="num">-</td>
+        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ASESORES + CREATIVOS -->
+<div class="chart-grid">
+    <div class="section">
+        <div class="section-title"><span class="icon">&#128100;</span> Asesores &mdash; Ventas META</div>
+        <div class="table-wrapper" style="margin-bottom: 0;">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Asesor</th>
+                            <th>Ventas</th>
+                            <th>Revenue</th>
+                            <th>Ticket Prom.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+            <td style="font-weight:600">ASHLEY CANTILLO</td>
+            <td class="num">6</td>
+            <td class="num">$301.444.800</td>
+            <td class="num">$50.240.800</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">KAREN GUARDO</td>
+            <td class="num">7</td>
+            <td class="num">$298.302.000</td>
+            <td class="num">$42.614.571</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">DANIELA PERALTA</td>
+            <td class="num">8</td>
+            <td class="num">$257.053.300</td>
+            <td class="num">$32.131.662</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">KAREN LAMBIS</td>
+            <td class="num">5</td>
+            <td class="num">$197.418.400</td>
+            <td class="num">$39.483.680</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">VALERIA FLOREZ</td>
+            <td class="num">6</td>
+            <td class="num">$144.093.000</td>
+            <td class="num">$24.015.500</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">KEVIN DIAZ</td>
+            <td class="num">1</td>
+            <td class="num">$56.917.300</td>
+            <td class="num">$56.917.300</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">RAFAEL GOMEZ</td>
+            <td class="num">1</td>
+            <td class="num">$56.240.000</td>
+            <td class="num">$56.240.000</td>
+        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-title"><span class="icon">&#127912;</span> Creativos que Venden &mdash; META</div>
+        <div class="table-wrapper" style="margin-bottom: 0;">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Anuncio/Creativo</th>
+                            <th>Ventas</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+            <td style="font-weight:600">750000</td>
+            <td class="num">7</td>
+            <td class="num">$357.235.500</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">TESTIMONIO MARY</td>
+            <td class="num">4</td>
+            <td class="num">$203.846.000</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">DRONE</td>
+            <td class="num">4</td>
+            <td class="num">$200.850.400</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">CARCEL</td>
+            <td class="num">3</td>
+            <td class="num">$153.716.100</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">SHEIN</td>
+            <td class="num">3</td>
+            <td class="num">$47.700.000</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">JHON BORRACHO 2</td>
+            <td class="num">3</td>
+            <td class="num">$0</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">DANIEL BORRACHO</td>
+            <td class="num">2</td>
+            <td class="num">$98.399.600</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">TRAMPA</td>
+            <td class="num">1</td>
+            <td class="num">$47.880.000</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">BORRACHO</td>
+            <td class="num">1</td>
+            <td class="num">$50.880.000</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">CUOTAS</td>
+            <td class="num">1</td>
+            <td class="num">$0</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">$750.000</td>
+            <td class="num">1</td>
+            <td class="num">$0</td>
+        </tr>
+<tr>
+            <td style="font-weight:600">SOBORNO</td>
+            <td class="num">1</td>
+            <td class="num">$0</td>
+        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- META ADS PERFORMANCE (Original Sections)              -->
+<!-- ══════════════════════════════════════════════════════ -->
 
 <!-- DAILY SPEND & LEADS CHART -->
 <div class="section">
@@ -943,880 +1199,6 @@ tbody tr:hover {
             </div>
         </div>
         
-        </div>
-    </div>
-</div>
-
-
-<!-- TOP CONVERTING ADS -->
-<div class="section">
-    <div class="section-title"><span class="icon">&#127775;</span> Anuncios que Mas Convierten</div>
-    <div class="performers-grid">
-        <div class="performers-section">
-            <h3><span style="color: var(--accent-cyan)">&#128200;</span> Mas Leads (Volumen)</h3>
-
-        <div class="performer-card" style="border-left: 4px solid #00d4aa">
-            <div class="performer-rank" style="color: #00d4aa">&#9650; #1</div>
-            <div class="performer-name">DRONE</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">20/10/25_CP_EVENTO26OCT_FORM</div>
-            <div style="background:rgba(0,212,170,0.08);border-radius:6px;height:6px;margin-bottom:10px;overflow:hidden">
-                <div style="background:#00d4aa;height:100%;width:96%;border-radius:6px"></div>
-            </div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value" style="color:#00d4aa">401</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value">$3.861</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$1.548.243</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">1.60%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #00d4aa">
-            <div class="performer-rank" style="color: #00d4aa">&#9650; #2</div>
-            <div class="performer-name">TESTIMONIO MARY</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM</div>
-            <div style="background:rgba(0,212,170,0.08);border-radius:6px;height:6px;margin-bottom:10px;overflow:hidden">
-                <div style="background:#00d4aa;height:100%;width:83%;border-radius:6px"></div>
-            </div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value" style="color:#00d4aa">345</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value">$4.943</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$1.705.214</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">5.03%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #00d4aa">
-            <div class="performer-rank" style="color: #00d4aa">&#9650; #3</div>
-            <div class="performer-name">$750.000</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">18/11/25_CP_PRUEBACA_FORM</div>
-            <div style="background:rgba(0,212,170,0.08);border-radius:6px;height:6px;margin-bottom:10px;overflow:hidden">
-                <div style="background:#00d4aa;height:100%;width:77%;border-radius:6px"></div>
-            </div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value" style="color:#00d4aa">323</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value">$8.207</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$2.650.903</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">4.42%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #00d4aa">
-            <div class="performer-rank" style="color: #00d4aa">&#9650; #4</div>
-            <div class="performer-name">SHEIN</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">26/03/25 FORM META PRUEBAS</div>
-            <div style="background:rgba(0,212,170,0.08);border-radius:6px;height:6px;margin-bottom:10px;overflow:hidden">
-                <div style="background:#00d4aa;height:100%;width:22%;border-radius:6px"></div>
-            </div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value" style="color:#00d4aa">91</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value">$4.767</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$433.777</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">1.96%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #00d4aa">
-            <div class="performer-rank" style="color: #00d4aa">&#9650; #5</div>
-            <div class="performer-name">Vomito</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">26/03/25 FORM META PRUEBAS</div>
-            <div style="background:rgba(0,212,170,0.08);border-radius:6px;height:6px;margin-bottom:10px;overflow:hidden">
-                <div style="background:#00d4aa;height:100%;width:13%;border-radius:6px"></div>
-            </div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value" style="color:#00d4aa">53</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value">$4.854</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$257.276</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">4.80%</span>
-                </div>
-            </div>
-        </div>
-
-        </div>
-        <div class="performers-section">
-            <h3><span style="color: var(--accent-purple)">&#128142;</span> Mejor CPL (Eficiencia, min 5 leads)</h3>
-
-        <div class="performer-card" style="border-left: 4px solid #7b2ff7">
-            <div class="performer-rank" style="color: #7b2ff7">&#9733; #1</div>
-            <div class="performer-name">$750 RECARGADO</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">24/02/26_CP_1CA1A_FORM</div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value" style="color:#7b2ff7">$1.652</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value">10</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$16.520</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">2.24%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #7b2ff7">
-            <div class="performer-rank" style="color: #7b2ff7">&#9733; #2</div>
-            <div class="performer-name">PICADA</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">CP_24/07/2025_VIDEOSCOOL_FORM</div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value" style="color:#7b2ff7">$2.898</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value">6</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$17.389</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">1.34%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #7b2ff7">
-            <div class="performer-rank" style="color: #7b2ff7">&#9733; #3</div>
-            <div class="performer-name">SOBORNO</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">04/02/26_CP_VIDEOSESTRATEGY_FORM</div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value" style="color:#7b2ff7">$3.081</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value">43</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$132.490</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">2.80%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #7b2ff7">
-            <div class="performer-rank" style="color: #7b2ff7">&#9733; #4</div>
-            <div class="performer-name">SOBORNO</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">04/02/26_CP_VIDEOSESTRATEGY_FORM</div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value" style="color:#7b2ff7">$3.164</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value">35</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$110.741</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">2.61%</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="performer-card" style="border-left: 4px solid #7b2ff7">
-            <div class="performer-rank" style="color: #7b2ff7">&#9733; #5</div>
-            <div class="performer-name">SRA MARÍA</div>
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">14/01/26_CP_VIDEOSENE_FORM</div>
-            <div class="performer-stats">
-                <div class="performer-stat">
-                    <span class="stat-label">CPL</span>
-                    <span class="stat-value" style="color:#7b2ff7">$3.494</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Leads</span>
-                    <span class="stat-value">10</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">Inversion</span>
-                    <span class="stat-value">$34.940</span>
-                </div>
-                <div class="performer-stat">
-                    <span class="stat-label">CTR</span>
-                    <span class="stat-value">5.15%</span>
-                </div>
-            </div>
-        </div>
-
-        </div>
-    </div>
-</div>
-
-<!-- AD PERFORMANCE TABLE -->
-<div class="section">
-    <div class="section-title"><span class="icon">&#127916;</span> Rendimiento por Anuncio</div>
-    <div class="table-wrapper">
-        <div class="table-scroll">
-            <table id="adTable">
-                <thead>
-                    <tr>
-                        <th onclick="sortTable('adTable', 0, 'str')">Anuncio <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 1, 'str')">Campana <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 2, 'str')">Conjunto <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 3, 'num')">Inversion <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 4, 'num')">Leads <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 5, 'num')">CPL <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 6, 'num')">Impresiones <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 7, 'num')">CTR <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 8, 'num')">Link Clicks <span class="sort-icon">&#8645;</span></th>
-                        <th onclick="sortTable('adTable', 9, 'num')">Video Views <span class="sort-icon">&#8645;</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">DRONE</td>
-            <td class="campaign-name" style="max-width:200px">20/10/25_CP_EVENTO26OCT_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$1.548.243</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">401</td>
-            <td class="num cpl-low">$3.861</td>
-            <td class="num">311,316</td>
-            <td class="num">1.60%</td>
-            <td class="num">2,097</td>
-            <td class="num">53,126</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">TESTIMONIO MARY</td>
-            <td class="campaign-name" style="max-width:200px">07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$1.705.214</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">345</td>
-            <td class="num cpl-mid">$4.943</td>
-            <td class="num">155,931</td>
-            <td class="num">5.03%</td>
-            <td class="num">4,262</td>
-            <td class="num">55,550</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">$750.000</td>
-            <td class="campaign-name" style="max-width:200px">18/11/25_CP_PRUEBACA_FORM</td>
-            <td class="adset-name">ABIERTO V1</td>
-            <td class="num">$2.650.903</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">323</td>
-            <td class="num cpl-high">$8.207</td>
-            <td class="num">161,075</td>
-            <td class="num">4.42%</td>
-            <td class="num">4,924</td>
-            <td class="num">41,391</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">SHEIN</td>
-            <td class="campaign-name" style="max-width:200px">26/03/25 FORM META PRUEBAS</td>
-            <td class="adset-name">ABIERTO CTG FORM SIMPLE</td>
-            <td class="num">$433.777</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">91</td>
-            <td class="num cpl-mid">$4.767</td>
-            <td class="num">57,606</td>
-            <td class="num">1.96%</td>
-            <td class="num">493</td>
-            <td class="num">13,865</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">Vomito</td>
-            <td class="campaign-name" style="max-width:200px">26/03/25 FORM META PRUEBAS</td>
-            <td class="adset-name">ABIERTO CTG FORM SIMPLE</td>
-            <td class="num">$257.276</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">53</td>
-            <td class="num cpl-mid">$4.854</td>
-            <td class="num">32,335</td>
-            <td class="num">4.80%</td>
-            <td class="num">1,169</td>
-            <td class="num">9,340</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">JHON BORRACHO 2</td>
-            <td class="campaign-name" style="max-width:200px">29/10/25_GENERALOCT_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$221.907</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">46</td>
-            <td class="num cpl-mid">$4.824</td>
-            <td class="num">26,018</td>
-            <td class="num">2.28%</td>
-            <td class="num">345</td>
-            <td class="num">9,967</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">SOBORNO</td>
-            <td class="campaign-name" style="max-width:200px">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$132.490</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">43</td>
-            <td class="num cpl-low">$3.081</td>
-            <td class="num">18,776</td>
-            <td class="num">2.80%</td>
-            <td class="num">212</td>
-            <td class="num">7,093</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">SOBORNO</td>
-            <td class="campaign-name" style="max-width:200px">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$110.741</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">35</td>
-            <td class="num cpl-low">$3.164</td>
-            <td class="num">17,201</td>
-            <td class="num">2.61%</td>
-            <td class="num">193</td>
-            <td class="num">6,173</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">VALOR AGREGADO</td>
-            <td class="campaign-name" style="max-width:200px">14/01/26_CP_VIDEOSENE_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$169.342</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">35</td>
-            <td class="num cpl-mid">$4.838</td>
-            <td class="num">12,283</td>
-            <td class="num">2.85%</td>
-            <td class="num">149</td>
-            <td class="num">2,299</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CUOTAS</td>
-            <td class="campaign-name" style="max-width:200px">29/10/25_GENERALOCT_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$173.358</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">34</td>
-            <td class="num cpl-mid">$5.099</td>
-            <td class="num">20,861</td>
-            <td class="num">2.08%</td>
-            <td class="num">192</td>
-            <td class="num">4,364</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">SOBORNO</td>
-            <td class="campaign-name" style="max-width:200px">08/02/26_CP_VIDEOS_FORM PREG</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$98.319</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">28</td>
-            <td class="num cpl-low">$3.511</td>
-            <td class="num">12,217</td>
-            <td class="num">2.14%</td>
-            <td class="num">128</td>
-            <td class="num">4,121</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">ZOOM SANCOCHO</td>
-            <td class="campaign-name" style="max-width:200px">28/11/25_CP_GENERALNOV_FORM</td>
-            <td class="adset-name">SEMI ABIERTO</td>
-            <td class="num">$104.179</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">27</td>
-            <td class="num cpl-low">$3.858</td>
-            <td class="num">13,347</td>
-            <td class="num">1.84%</td>
-            <td class="num">98</td>
-            <td class="num">3,540</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">LUCHADORAS</td>
-            <td class="campaign-name" style="max-width:200px">24/09/2025_CP_VIDEOSSEPT_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$103.311</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">26</td>
-            <td class="num cpl-low">$3.974</td>
-            <td class="num">7,173</td>
-            <td class="num">3.37%</td>
-            <td class="num">134</td>
-            <td class="num">2,236</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CONVERSACIÓN</td>
-            <td class="campaign-name" style="max-width:200px">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$92.887</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">22</td>
-            <td class="num cpl-mid">$4.222</td>
-            <td class="num">14,618</td>
-            <td class="num">2.67%</td>
-            <td class="num">205</td>
-            <td class="num">3,892</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CONVERSACIÓN</td>
-            <td class="campaign-name" style="max-width:200px">08/02/26_CP_VIDEOS_FORM PREG</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$73.740</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">20</td>
-            <td class="num cpl-low">$3.687</td>
-            <td class="num">7,237</td>
-            <td class="num">2.47%</td>
-            <td class="num">95</td>
-            <td class="num">2,089</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">VALLA CHRIS</td>
-            <td class="campaign-name" style="max-width:200px">13/02/26_CP_2PREGU_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$98.820</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">20</td>
-            <td class="num cpl-mid">$4.941</td>
-            <td class="num">13,994</td>
-            <td class="num">2.22%</td>
-            <td class="num">126</td>
-            <td class="num">3,620</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CONVERSACIÓN</td>
-            <td class="campaign-name" style="max-width:200px">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$91.986</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">19</td>
-            <td class="num cpl-mid">$4.841</td>
-            <td class="num">12,797</td>
-            <td class="num">2.42%</td>
-            <td class="num">164</td>
-            <td class="num">3,382</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CHRIS SENTIMENTAL</td>
-            <td class="campaign-name" style="max-width:200px">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$92.572</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">16</td>
-            <td class="num cpl-mid">$5.786</td>
-            <td class="num">5,324</td>
-            <td class="num">4.83%</td>
-            <td class="num">153</td>
-            <td class="num">1,699</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">$750 RECARGADO</td>
-            <td class="campaign-name" style="max-width:200px">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$16.520</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">10</td>
-            <td class="num cpl-low">$1.652</td>
-            <td class="num">3,172</td>
-            <td class="num">2.24%</td>
-            <td class="num">39</td>
-            <td class="num">644</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">SRA MARÍA</td>
-            <td class="campaign-name" style="max-width:200px">14/01/26_CP_VIDEOSENE_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$34.940</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">10</td>
-            <td class="num cpl-low">$3.494</td>
-            <td class="num">2,233</td>
-            <td class="num">5.15%</td>
-            <td class="num">65</td>
-            <td class="num">777</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">PICADA</td>
-            <td class="campaign-name" style="max-width:200px">CP_24/07/2025_VIDEOSCOOL_FORM</td>
-            <td class="adset-name">INTERESES</td>
-            <td class="num">$17.389</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">6</td>
-            <td class="num cpl-low">$2.898</td>
-            <td class="num">3,739</td>
-            <td class="num">1.34%</td>
-            <td class="num">20</td>
-            <td class="num">898</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">DRONE PLANO</td>
-            <td class="campaign-name" style="max-width:200px">13/02/26_CP_2PREGU_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$27.581</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">6</td>
-            <td class="num cpl-mid">$4.597</td>
-            <td class="num">3,296</td>
-            <td class="num">1.85%</td>
-            <td class="num">20</td>
-            <td class="num">471</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">5 AÑOS</td>
-            <td class="campaign-name" style="max-width:200px">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$33.264</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">6</td>
-            <td class="num cpl-mid">$5.544</td>
-            <td class="num">2,029</td>
-            <td class="num">3.55%</td>
-            <td class="num">53</td>
-            <td class="num">562</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">JAIRO PEREZ</td>
-            <td class="campaign-name" style="max-width:200px">14/01/26_CP_VIDEOSENE_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$49.141</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">5</td>
-            <td class="num cpl-high">$9.828</td>
-            <td class="num">4,833</td>
-            <td class="num">3.50%</td>
-            <td class="num">117</td>
-            <td class="num">1,428</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">YA PERDISTE</td>
-            <td class="campaign-name" style="max-width:200px">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">REMARKETING</td>
-            <td class="num">$63.275</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">5</td>
-            <td class="num cpl-high">$12.655</td>
-            <td class="num">3,935</td>
-            <td class="num">4.40%</td>
-            <td class="num">126</td>
-            <td class="num">1,056</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">TRAMPA</td>
-            <td class="campaign-name" style="max-width:200px">19/12/25_CP_VIDEOSNEWSDIC_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$6.419</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">4</td>
-            <td class="num cpl-low">$1.605</td>
-            <td class="num">980</td>
-            <td class="num">4.39%</td>
-            <td class="num">29</td>
-            <td class="num">357</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">ROXE</td>
-            <td class="campaign-name" style="max-width:200px">14/01/26_CP_VIDEOSENE_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$31.985</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">4</td>
-            <td class="num cpl-mid">$7.996</td>
-            <td class="num">2,116</td>
-            <td class="num">5.20%</td>
-            <td class="num">77</td>
-            <td class="num">901</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">DANI DOBLE</td>
-            <td class="campaign-name" style="max-width:200px">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">REMARKETING</td>
-            <td class="num">$7.158</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">3</td>
-            <td class="num cpl-low">$2.386</td>
-            <td class="num">531</td>
-            <td class="num">2.82%</td>
-            <td class="num">9</td>
-            <td class="num">144</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">ROMPE EL CICLO</td>
-            <td class="campaign-name" style="max-width:200px">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$14.560</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">3</td>
-            <td class="num cpl-mid">$4.853</td>
-            <td class="num">1,998</td>
-            <td class="num">2.60%</td>
-            <td class="num">25</td>
-            <td class="num">675</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">RONALD</td>
-            <td class="campaign-name" style="max-width:200px">08/02/26_CP_VIDEOS_FORM PREG</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$1.743</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">2</td>
-            <td class="num cpl-low">$872</td>
-            <td class="num">120</td>
-            <td class="num">7.50%</td>
-            <td class="num">4</td>
-            <td class="num">42</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">TRAMPA</td>
-            <td class="campaign-name" style="max-width:200px">19/12/25_CP_VIDEOSNEWSDIC_FORM</td>
-            <td class="adset-name">REMARKETING</td>
-            <td class="num">$7.266</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">2</td>
-            <td class="num cpl-low">$3.633</td>
-            <td class="num">627</td>
-            <td class="num">6.38%</td>
-            <td class="num">31</td>
-            <td class="num">255</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">TESTIMONIO MARY</td>
-            <td class="campaign-name" style="max-width:200px">24/02/26_CP_BESTSELLER_FORMVERIF</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$11.122</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">2</td>
-            <td class="num cpl-mid">$5.561</td>
-            <td class="num">782</td>
-            <td class="num">3.84%</td>
-            <td class="num">15</td>
-            <td class="num">205</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CINE</td>
-            <td class="campaign-name" style="max-width:200px">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$14.258</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">2</td>
-            <td class="num cpl-mid">$7.129</td>
-            <td class="num">1,594</td>
-            <td class="num">1.57%</td>
-            <td class="num">11</td>
-            <td class="num">580</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">DANIEL BORRACHO</td>
-            <td class="campaign-name" style="max-width:200px">28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1</td>
-            <td class="adset-name">SEGMENTADO PADRES</td>
-            <td class="num">$15.316</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">2</td>
-            <td class="num cpl-mid">$7.658</td>
-            <td class="num">3,130</td>
-            <td class="num">0.93%</td>
-            <td class="num">14</td>
-            <td class="num">702</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">BORRACHO</td>
-            <td class="campaign-name" style="max-width:200px">CP_24/07/2025_VIDEOSCOOL_FORM</td>
-            <td class="adset-name">SIMILAR</td>
-            <td class="num">$18.089</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">2</td>
-            <td class="num cpl-high">$9.044</td>
-            <td class="num">2,800</td>
-            <td class="num">2.04%</td>
-            <td class="num">30</td>
-            <td class="num">883</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">DANIEL BORRACHO</td>
-            <td class="campaign-name" style="max-width:200px">28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1</td>
-            <td class="adset-name">SEGMENTADO 1ERA VIVIENDA</td>
-            <td class="num">$19.908</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">2</td>
-            <td class="num cpl-high">$9.954</td>
-            <td class="num">3,663</td>
-            <td class="num">1.26%</td>
-            <td class="num">23</td>
-            <td class="num">836</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">PATRIMONIO</td>
-            <td class="campaign-name" style="max-width:200px">08/02/26_CP_VIDEOS_FORM PREG</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$326</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-low">$326</td>
-            <td class="num">17</td>
-            <td class="num">17.65%</td>
-            <td class="num">2</td>
-            <td class="num">3</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">6 COSAS</td>
-            <td class="campaign-name" style="max-width:200px">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$1.485</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-low">$1.485</td>
-            <td class="num">108</td>
-            <td class="num">3.70%</td>
-            <td class="num">3</td>
-            <td class="num">42</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">COSAS LEGALES</td>
-            <td class="campaign-name" style="max-width:200px">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$2.463</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-low">$2.463</td>
-            <td class="num">263</td>
-            <td class="num">3.42%</td>
-            <td class="num">4</td>
-            <td class="num">60</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CESANTÍAS</td>
-            <td class="campaign-name" style="max-width:200px">13/02/26_CP_2PREGU_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$2.647</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-low">$2.647</td>
-            <td class="num">303</td>
-            <td class="num">2.64%</td>
-            <td class="num">5</td>
-            <td class="num">43</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">TODOS QUIEREN</td>
-            <td class="campaign-name" style="max-width:200px">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$2.712</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-low">$2.712</td>
-            <td class="num">140</td>
-            <td class="num">3.57%</td>
-            <td class="num">4</td>
-            <td class="num">45</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">AVANCE DE OBRA</td>
-            <td class="campaign-name" style="max-width:200px">08/02/26_CP_VIDEOS_FORM PREG</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$4.345</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-mid">$4.345</td>
-            <td class="num">364</td>
-            <td class="num">3.02%</td>
-            <td class="num">3</td>
-            <td class="num">61</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">QUÉ HARÍAS</td>
-            <td class="campaign-name" style="max-width:200px">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$4.555</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-mid">$4.555</td>
-            <td class="num">255</td>
-            <td class="num">3.92%</td>
-            <td class="num">6</td>
-            <td class="num">71</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">TRAMPA</td>
-            <td class="campaign-name" style="max-width:200px">19/12/25_CP_VIDEOSNEWSDIC_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$6.030</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-mid">$6.030</td>
-            <td class="num">851</td>
-            <td class="num">5.64%</td>
-            <td class="num">34</td>
-            <td class="num">313</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">CERVEZA O LADRILLO</td>
-            <td class="campaign-name" style="max-width:200px">13/02/26_CP_2PREGU_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$6.357</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-mid">$6.357</td>
-            <td class="num">778</td>
-            <td class="num">0.90%</td>
-            <td class="num">3</td>
-            <td class="num">236</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">TUMBA</td>
-            <td class="campaign-name" style="max-width:200px">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$14.339</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-high">$14.339</td>
-            <td class="num">1,420</td>
-            <td class="num">1.55%</td>
-            <td class="num">8</td>
-            <td class="num">358</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">MINIATURA</td>
-            <td class="campaign-name" style="max-width:200px">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$14.688</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-high">$14.688</td>
-            <td class="num">1,409</td>
-            <td class="num">1.70%</td>
-            <td class="num">14</td>
-            <td class="num">205</td>
-        </tr>
-                    <tr>
-            <td class="campaign-name" style="color:var(--accent-cyan);font-weight:600">VIDEO FLASH</td>
-            <td class="campaign-name" style="max-width:200px">31/10/25_RECON_MENSAJESIG</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$285.788</td>
-            <td class="num" style="font-weight:700;color:var(--accent-cyan)">1</td>
-            <td class="num cpl-high">$285.788</td>
-            <td class="num">413,503</td>
-            <td class="num">0.92%</td>
-            <td class="num">7</td>
-            <td class="num">52,240</td>
-        </tr>
-                </tbody>
-            </table>
         </div>
     </div>
 </div>
@@ -2468,8 +1850,8 @@ tbody tr:hover {
 
 <!-- FOOTER -->
 <div class="footer">
-    Los Lagos Condominio &mdash; Dashboard Meta Ads &mdash; Generado automaticamente el 27/02/2026 10:09<br>
-    Datos de Meta Ads API &bull; Cuenta: act_1089998585939349 &bull; Moneda: COP (Pesos Colombianos)
+    Los Lagos Condominio &mdash; Dashboard Meta Ads + Ventas Reales &mdash; Generado automaticamente el 27/02/2026 11:24<br>
+    Datos de Meta Ads API &bull; Ventas: Google Sheet (Cierre Campanas) &bull; Cuenta: act_1089998585939349 &bull; COP
 </div>
 
 </div><!-- /container -->
@@ -2480,9 +1862,86 @@ Chart.defaults.color = '#8892b0';
 Chart.defaults.borderColor = 'rgba(42, 42, 74, 0.5)';
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
 
-// ── Full date strings for filtering ────────────────────
-const dailyDates = ["2026-01-28","2026-01-29","2026-01-30","2026-01-31","2026-02-01","2026-02-02","2026-02-03","2026-02-04","2026-02-05","2026-02-06","2026-02-07","2026-02-08","2026-02-09","2026-02-10","2026-02-11","2026-02-12","2026-02-13","2026-02-14","2026-02-15","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-21","2026-02-22","2026-02-23","2026-02-24","2026-02-25","2026-02-26"];
-const dailyImpressions = [58043,53308,48997,49472,63961,59810,53518,50836,55884,51615,52466,62283,60276,53718,50462,45392,42776,46599,54853,53767,48020,48340,45995,42360,42685,50770,43500,46687,47995,46681];
+// ── VENTAS POR FUENTE CHART ────────────────────────────
+const sourceLabels = ["META", "REFERIDO", "TIKTOK", "GOOGLE ADS", "PROYECTO", "MERCADO ORGANICO ASESOR", "INMOBILIARIA"];
+const sourceCounts = [34, 36, 18, 11, 2, 3, 58];
+const sourceRevenues = [1311468800.0, 1068158100.0, 711030200.0, 367583452.0, 96250000.0, 93760000.0, 0];
+
+new Chart(document.getElementById('sourceChart'), {
+    type: 'bar',
+    data: {
+        labels: sourceLabels,
+        datasets: [
+            {
+                label: 'Ventas (#)',
+                data: sourceCounts,
+                backgroundColor: [
+                    'rgba(67, 97, 238, 0.7)',
+                    'rgba(0, 212, 170, 0.7)',
+                    'rgba(123, 47, 247, 0.7)',
+                    'rgba(255, 159, 67, 0.7)',
+                    'rgba(255, 107, 157, 0.7)',
+                    'rgba(255, 107, 107, 0.7)',
+                    'rgba(100, 100, 150, 0.7)'
+                ],
+                borderColor: [
+                    '#4361ee', '#00d4aa', '#7b2ff7', '#ff9f43', '#ff6b9d', '#ff6b6b', '#6464a0'
+                ],
+                borderWidth: 2,
+                borderRadius: 6,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Revenue (COP)',
+                data: sourceRevenues,
+                type: 'line',
+                borderColor: '#00d4aa',
+                backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                borderWidth: 3,
+                pointBackgroundColor: '#00d4aa',
+                pointRadius: 5,
+                pointHoverRadius: 8,
+                tension: 0.3,
+                yAxisID: 'y1'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { labels: { usePointStyle: true, padding: 16 } },
+            tooltip: {
+                backgroundColor: 'rgba(15, 15, 26, 0.95)',
+                borderColor: 'rgba(67, 97, 238, 0.3)',
+                borderWidth: 1,
+                padding: 12,
+                callbacks: {
+                    label: function(ctx) {
+                        if (ctx.dataset.yAxisID === 'y1') {
+                            return 'Revenue: $' + (ctx.parsed.y / 1000000).toFixed(0) + 'M';
+                        }
+                        return ctx.dataset.label + ': ' + ctx.parsed.y;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                position: 'left',
+                title: { display: true, text: '# Ventas', font: { weight: '600' } },
+                grid: { color: 'rgba(42, 42, 74, 0.3)' }
+            },
+            y1: {
+                position: 'right',
+                title: { display: true, text: 'Revenue (COP)', font: { weight: '600' } },
+                ticks: { callback: v => '$' + (v/1000000).toFixed(0) + 'M' },
+                grid: { drawOnChartArea: false }
+            },
+            x: { grid: { color: 'rgba(42, 42, 74, 0.2)' } }
+        }
+    }
+});
 
 const dailyLabels = ["28/01", "29/01", "30/01", "31/01", "01/02", "02/02", "03/02", "04/02", "05/02", "06/02", "07/02", "08/02", "09/02", "10/02", "11/02", "12/02", "13/02", "14/02", "15/02", "16/02", "17/02", "18/02", "19/02", "20/02", "21/02", "22/02", "23/02", "24/02", "25/02", "26/02"];
 const dailySpend = [298610.0, 303395.0, 296835.0, 296578.0, 347022.0, 297892.0, 304721.0, 288191.0, 317635.0, 306511.0, 307172.0, 340683.0, 351349.0, 326727.0, 336344.0, 324705.0, 314963.0, 322203.0, 375729.0, 323486.0, 309648.0, 301206.0, 299700.0, 302530.0, 297351.0, 325027.0, 320017.0, 329139.0, 359479.0, 354826.0];
@@ -2491,109 +1950,8 @@ const dailyCPL = [4147.0, 3940.0, 6746.0, 5492.0, 4449.0, 5049.0, 4761.0, 4885.0
 const dailyCTR = [2.45, 2.94, 2.93, 3.28, 3.66, 3.35, 3.43, 3.31, 3.72, 3.56, 3.5, 3.1, 3.12, 3.4, 3.33, 3.41, 3.43, 3.4, 3.54, 3.07, 3.2, 3.18, 3.28, 3.06, 3.49, 2.89, 4.14, 3.58, 3.14, 3.3];
 const dailyCPM = [5145.0, 5691.0, 6059.0, 5995.0, 5423.0, 4981.0, 5694.0, 5669.0, 5684.0, 5939.0, 5855.0, 5471.0, 5832.0, 6083.0, 6664.0, 7154.0, 7363.0, 6916.0, 6849.0, 6017.0, 6449.0, 6232.0, 6510.0, 7140.0, 6964.0, 6411.0, 7350.0, 7047.0, 7493.0, 7598.0];
 
-// ── Chart instances (stored for updates) ───────────────
-let dailyChart, cplTrendChart, ctrTrendChart, cpmTrendChart;
-
-// ── DATE FILTER FUNCTIONS ──────────────────────────────
-function getFilteredIndices() {
-    const from = document.getElementById('dateFrom').value;
-    const to = document.getElementById('dateTo').value;
-    const indices = [];
-    for (let i = 0; i < dailyDates.length; i++) {
-        if (dailyDates[i] >= from && dailyDates[i] <= to) indices.push(i);
-    }
-    return indices;
-}
-
-function filterArray(arr, indices) {
-    return indices.map(i => arr[i]);
-}
-
-function fmtCOP(n) {
-    return '$' + Math.round(n).toLocaleString('es-CO');
-}
-
-function fmtNum(n) {
-    return Math.round(n).toLocaleString('es-CO');
-}
-
-function updateDashboard() {
-    const idx = getFilteredIndices();
-    const fLabels = filterArray(dailyLabels, idx);
-    const fSpend = filterArray(dailySpend, idx);
-    const fLeads = filterArray(dailyLeads, idx);
-    const fCPL = filterArray(dailyCPL, idx);
-    const fCTR = filterArray(dailyCTR, idx);
-    const fCPM = filterArray(dailyCPM, idx);
-    const fImpressions = filterArray(dailyImpressions, idx);
-
-    const totalSpend = fSpend.reduce((a,b) => a+b, 0);
-    const totalLeads = fLeads.reduce((a,b) => a+b, 0);
-    const avgCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
-    const totalImpressions = fImpressions.reduce((a,b) => a+b, 0);
-    const avgCTR = fCTR.reduce((a,b) => a+b, 0) / fCTR.length;
-    const avgCPM = fCPM.reduce((a,b) => a+b, 0) / fCPM.length;
-    const days = idx.length;
-
-    // Update KPI cards
-    const kpiValues = document.querySelectorAll('.kpi-value');
-    const kpiSubs = document.querySelectorAll('.kpi-sub');
-    if (kpiValues.length >= 8) {
-        kpiValues[0].textContent = fmtCOP(totalSpend);
-        kpiSubs[0].textContent = 'COP (' + days + ' dias)';
-        kpiValues[1].textContent = fmtNum(totalLeads);
-        kpiValues[2].textContent = fmtCOP(avgCPL);
-        kpiValues[3].textContent = fmtNum(totalImpressions);
-        kpiSubs[3].textContent = 'CPM: ' + fmtCOP(avgCPM);
-        kpiValues[4].textContent = avgCTR.toFixed(2) + '%';
-    }
-
-    // Update charts
-    dailyChart.data.labels = fLabels;
-    dailyChart.data.datasets[0].data = fSpend;
-    dailyChart.data.datasets[1].data = fLeads;
-    dailyChart.update('none');
-
-    cplTrendChart.data.labels = fLabels;
-    cplTrendChart.data.datasets[0].data = fCPL;
-    cplTrendChart.update('none');
-
-    ctrTrendChart.data.labels = fLabels;
-    ctrTrendChart.data.datasets[0].data = fCTR;
-    ctrTrendChart.update('none');
-
-    cpmTrendChart.data.labels = fLabels;
-    cpmTrendChart.data.datasets[0].data = fCPM;
-    cpmTrendChart.update('none');
-}
-
-function setPreset(days) {
-    const allBtns = document.querySelectorAll('.preset-btn');
-    allBtns.forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-
-    const endDate = '2026-02-26';
-    const end = new Date(endDate);
-    const start = new Date(end);
-    start.setDate(start.getDate() - days + 1);
-    const startStr = start.toISOString().split('T')[0];
-
-    document.getElementById('dateFrom').value = startStr;
-    document.getElementById('dateTo').value = endDate;
-    updateDashboard();
-}
-
-document.getElementById('dateFrom').addEventListener('change', () => {
-    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    updateDashboard();
-});
-document.getElementById('dateTo').addEventListener('change', () => {
-    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    updateDashboard();
-});
-
 // ── DAILY SPEND & LEADS CHART ──────────────────────────
-dailyChart = new Chart(document.getElementById('dailyChart'), {
+new Chart(document.getElementById('dailyChart'), {
     type: 'bar',
     data: {
         labels: dailyLabels,
@@ -2720,7 +2078,7 @@ new Chart(document.getElementById('objectiveChart'), {
 });
 
 // ── CPL TREND CHART ────────────────────────────────────
-cplTrendChart = new Chart(document.getElementById('cplTrendChart'), {
+new Chart(document.getElementById('cplTrendChart'), {
     type: 'line',
     data: {
         labels: dailyLabels,
@@ -2760,7 +2118,7 @@ cplTrendChart = new Chart(document.getElementById('cplTrendChart'), {
 });
 
 // ── CTR TREND CHART ────────────────────────────────────
-ctrTrendChart = new Chart(document.getElementById('ctrTrendChart'), {
+new Chart(document.getElementById('ctrTrendChart'), {
     type: 'line',
     data: {
         labels: dailyLabels,
@@ -2798,7 +2156,7 @@ ctrTrendChart = new Chart(document.getElementById('ctrTrendChart'), {
 });
 
 // ── CPM TREND CHART ────────────────────────────────────
-cpmTrendChart = new Chart(document.getElementById('cpmTrendChart'), {
+new Chart(document.getElementById('cpmTrendChart'), {
     type: 'line',
     data: {
         labels: dailyLabels,
