@@ -11,6 +11,7 @@ import subprocess
 import sys
 import base64
 import hashlib
+import socket
 import urllib.request
 import urllib.error
 from datetime import datetime
@@ -18,10 +19,7 @@ from collections import defaultdict
 
 # ── File paths ──────────────────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CAMPAIGN_FILE = os.path.expanduser(
-    "~/.claude/projects/-Users-global-Desktop-Meta-Ads/"
-    "b503a204-759d-45db-8517-6d1399e45c9a/tool-results/b5297eb.txt"
-)
+CAMPAIGN_FILE = os.path.join(SCRIPT_DIR, "ad_insights.json")
 DAILY_FILE = os.path.join(SCRIPT_DIR, "daily_insights.json")
 ADSET_FILE = os.path.join(SCRIPT_DIR, "adset_insights.json")
 VENTAS_FILE = os.path.join(SCRIPT_DIR, "ventas_2026.csv")
@@ -79,7 +77,7 @@ def call_openai(api_key, system_prompt, user_prompt, model="gpt-4o-mini"):
     }).encode("utf-8")
 
     req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-    with urllib.request.urlopen(req, timeout=45) as resp:
+    with urllib.request.urlopen(req, timeout=15) as resp:
         result = json.loads(resp.read().decode("utf-8"))
         return result["choices"][0]["message"]["content"]
 
@@ -110,10 +108,21 @@ def get_cost_per_action(cost_list, action_type):
 
 
 def fmt_cop(val):
-    """Format as COP currency string."""
+    """Format as COP currency string with compact notation."""
+    if val >= 1_000_000_000:
+        return f"${val / 1_000_000_000:,.1f}B".replace(",", ".")
     if val >= 1_000_000:
-        return f"${val:,.0f}".replace(",", ".")
+        return f"${val / 1_000_000:,.1f}M".replace(",", ".")
     return f"${val:,.0f}".replace(",", ".")
+
+
+def fmt_num(val):
+    """Format a number with compact notation."""
+    if val >= 1_000_000:
+        return f"{val / 1_000_000:,.1f}M".replace(",", ".")
+    if val >= 1_000:
+        return f"{val / 1_000:,.1f}K".replace(",", ".")
+    return f"{val:,.0f}".replace(",", ".")
 
 
 def infer_objective(campaign_name):
@@ -1181,15 +1190,9 @@ REGLAS:
         _ai_analysis = json.loads(_ai_clean)
         print(f"  ✅ OpenAI analysis received: {len(_ai_analysis.get('positivo',[]))} positivo, "
               f"{len(_ai_analysis.get('vigilar',[]))} vigilar, {len(_ai_analysis.get('recomendaciones',[]))} recomendaciones")
-    except urllib.error.HTTPError as e:
-        print(f"  ⚠️  OpenAI API error: {e.code} {e.reason}")
-        try:
-            err_body = e.read().decode()
-            print(f"     {err_body[:200]}")
-        except:
-            pass
-    except urllib.error.URLError as e:
-        print(f"  ⚠️  Network error: {e.reason}")
+    except (urllib.error.HTTPError, urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError) as e:
+        print(f"  ⚠️  OpenAI API/Network error: {e}")
+        print("  → Using fallback (client-side refresh available)")
     except json.JSONDecodeError as e:
         print(f"  ⚠️  Failed to parse OpenAI response as JSON: {e}")
         print(f"     Raw response: {_ai_response[:300] if '_ai_response' in dir() else 'N/A'}")
@@ -1290,9 +1293,11 @@ _campaigns_js = json.dumps([{
     'name': c['name'], 'id': c['id'], 'spend': c['spend'], 'leads': c['leads'],
     'cpl': round(c['cpl']), 'ctr': round(c['ctr'], 2), 'cpm': round(c['cpm']),
     'reach': c['reach'], 'impressions': c['impressions'],
+    'clicks': c['clicks'], 'link_clicks': c['link_clicks'],
     'frequency': round(c.get('frequency', 0), 2),
     'video_views': c['video_views'], 'engagement': c['post_engagement'],
-    'messaging': c['messaging'], 'is_active': c.get('is_active', False)
+    'messaging': c['messaging'], 'is_active': c.get('is_active', False),
+    'objective': c['objective']
 } for c in campaigns], ensure_ascii=False)
 
 _adsets_js = json.dumps([{
@@ -1300,6 +1305,8 @@ _adsets_js = json.dumps([{
     'spend': a['spend'], 'leads': a['leads'], 'cpl': round(a['cpl']),
     'ctr': round(a['ctr'], 2), 'reach': a['reach'],
     'impressions': a['impressions'],
+    'clicks': a['clicks'], 'link_clicks': a['link_clicks'],
+    'video_views': a['video_views'],
     'frequency': round(a.get('frequency', 0), 2),
     'is_active': a.get('is_active', False)
 } for a in adsets], ensure_ascii=False)
@@ -1455,6 +1462,55 @@ body {{
     font-size: 12px;
     margin-top: 2px;
 }}
+.btn-refresh-data {{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 8px 20px;
+    background: var(--gradient-2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0,212,170,0.25);
+}}
+.btn-refresh-data:hover {{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0,212,170,0.4);
+}}
+.btn-refresh-data:disabled {{
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+}}
+.btn-refresh-data .spinner {{
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}}
+@keyframes spin {{ to {{ transform: rotate(360deg); }} }}
+.refresh-log {{
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    display: none;
+    border: 1px solid var(--border-color);
+}}
 .account-id {{
     display: inline-block;
     background: rgba(67, 97, 238, 0.15);
@@ -1515,11 +1571,14 @@ body {{
     font-weight: 600;
 }}
 .kpi-value {{
-    font-size: 26px;
+    font-size: clamp(20px, 3.5vw, 26px);
     font-weight: 800;
     margin-top: 6px;
     color: var(--text-primary);
     letter-spacing: -0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }}
 .kpi-sub {{
     font-size: 12px;
@@ -2019,7 +2078,10 @@ tbody tr:hover {{
         </div>
         <div class="header-right">
             <div class="date-range">{date_start_str} &mdash; {date_end_str}</div>
-            <div class="updated">Ultima actualizacion: {now_str}</div>
+            <div class="updated" id="lastUpdated">Ultima actualizacion: {now_str}</div>
+            <button id="btnRefreshData" class="btn-refresh-data" onclick="refreshData()" title="Descargar datos frescos de Meta Ads y Google Sheets, luego reconstruir el dashboard">
+                &#128259; Refrescar Datos
+            </button>
         </div>
     </div>
 </div>
@@ -2057,43 +2119,43 @@ tbody tr:hover {{
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128176;</span>
         <div class="kpi-label">Inversion Total</div>
-        <div class="kpi-value" id="kpi-spend">${total_spend:,.0f}</div>
+        <div class="kpi-value" id="kpi-spend">{fmt_cop(total_spend)}</div>
         <div class="kpi-sub" id="kpi-spend-sub">COP ({total_data_days} dias)</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128203;</span>
         <div class="kpi-label">Leads Totales</div>
-        <div class="kpi-value" id="kpi-leads">{total_leads:,}</div>
+        <div class="kpi-value" id="kpi-leads">{fmt_num(total_leads)}</div>
         <div class="kpi-sub">Formularios enviados</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128178;</span>
         <div class="kpi-label">Costo por Lead</div>
-        <div class="kpi-value" id="kpi-cpl">${avg_cpl:,.0f}</div>
+        <div class="kpi-value" id="kpi-cpl">{fmt_cop(avg_cpl)}</div>
         <div class="kpi-sub">COP promedio</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128065;</span>
         <div class="kpi-label">Impresiones</div>
-        <div class="kpi-value" id="kpi-impressions">{total_impressions:,}</div>
-        <div class="kpi-sub" id="kpi-cpm-sub">CPM: ${avg_cpm:,.0f}</div>
+        <div class="kpi-value" id="kpi-impressions">{fmt_num(total_impressions)}</div>
+        <div class="kpi-sub" id="kpi-cpm-sub">CPM: {fmt_cop(avg_cpm)}</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128073;</span>
         <div class="kpi-label">CTR (Total)</div>
         <div class="kpi-value" id="kpi-ctr">{avg_ctr:.2f}%</div>
-        <div class="kpi-sub" id="kpi-clicks-sub">{total_clicks:,} clics totales</div>
+        <div class="kpi-sub" id="kpi-clicks-sub">{fmt_num(total_clicks)} clics totales</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#127758;</span>
         <div class="kpi-label">Alcance</div>
-        <div class="kpi-value" id="kpi-reach">{total_reach:,}</div>
+        <div class="kpi-value" id="kpi-reach">{fmt_num(total_reach)}</div>
         <div class="kpi-sub">Cuentas unicas</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#127910;</span>
         <div class="kpi-label">Reproducciones Video</div>
-        <div class="kpi-value">{total_video_views:,}</div>
+        <div class="kpi-value">{fmt_num(total_video_views)}</div>
         <div class="kpi-sub">Vistas totales</div>
     </div>
     <div class="kpi-card animate-in">
@@ -2313,17 +2375,17 @@ tbody tr:hover {{
     </div>
 </div>
 
-<!-- TOP / BOTTOM PERFORMERS -->
+<!-- TOP / BOTTOM PERFORMERS (dynamic) -->
 <div class="section">
-    <div class="section-title"><span class="icon">&#127942;</span> Mejores y Peores Campanas por CPL</div>
+    <div class="section-title"><span class="icon">&#127942;</span> Mejores y Peores Campanas por CPL <span style="font-size:0.55em;color:var(--accent-cyan);margin-left:8px">&#9679; Solo campanas activas</span></div>
     <div class="performers-grid">
         <div class="performers-section">
             <h3><span style="color: var(--accent-cyan)">&#9650;</span> Mejor CPL (Mas Eficientes)</h3>
-            {build_performer_cards(top_performers, is_top=True)}
+            <div id="topPerformersContainer">{build_performer_cards(top_performers, is_top=True)}</div>
         </div>
         <div class="performers-section">
             <h3><span style="color: var(--accent-red)">&#9660;</span> Mayor CPL (Menos Eficientes)</h3>
-            {build_performer_cards(bottom_performers, is_top=False)}
+            <div id="bottomPerformersContainer">{build_performer_cards(bottom_performers, is_top=False)}</div>
         </div>
     </div>
 </div>
@@ -2347,7 +2409,7 @@ tbody tr:hover {{
                         <th onclick="sortTable('campaignTable', 8, 'num')">Video Views <span class="sort-icon">&#8645;</span></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="campaignTableBody">
                     {build_campaign_rows()}
                 </tbody>
             </table>
@@ -2375,7 +2437,7 @@ tbody tr:hover {{
                         <th onclick="sortTable('adsetTable', 9, 'num')">Video Views <span class="sort-icon">&#8645;</span></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="adsetTableBody">
                     {build_adset_rows()}
                 </tbody>
             </table>
@@ -2818,16 +2880,211 @@ const MESES_ES = {{'01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'
                    '07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'}};
 
 function fmtCOP(val) {{
-    if (val >= 1e6) return '$' + (val/1e6).toFixed(0) + 'M';
+    if (val >= 1e9) return '$' + (val/1e9).toFixed(1) + 'B';
+    if (val >= 1e6) return '$' + (val/1e6).toFixed(1) + 'M';
     if (val >= 1e3) return '$' + Math.round(val).toLocaleString('es-CO');
     return '$' + Math.round(val);
 }}
 function fmtCOPFull(val) {{
+    if (val >= 1e9) return '$' + (val/1e9).toFixed(1) + 'B';
+    if (val >= 1e6) return '$' + (val/1e6).toFixed(1) + 'M';
     return '$' + Math.round(val).toLocaleString('es-CO');
+}}
+function fmtNum(val) {{
+    if (val >= 1e6) return (val/1e6).toFixed(1) + 'M';
+    if (val >= 1e3) return (val/1e3).toFixed(1) + 'K';
+    return Math.round(val).toLocaleString('es-CO');
 }}
 function fmtDateES(iso) {{
     const p = iso.split('-');
     return parseInt(p[2]) + ' ' + MESES_ES[p[1]] + ' ' + p[0];
+}}
+
+function updatePerformers(fromDate, toDate) {{
+    // Aggregate daily data by campaign in the selected date range
+    const campMap = {{}};
+    ALL_DAILY_RAW.forEach(r => {{
+        const [date, campName, spend, leads] = r;
+        if (date < fromDate || date > toDate) return;
+        if (!campMap[campName]) campMap[campName] = {{name: campName, spend: 0, leads: 0}};
+        campMap[campName].spend += spend;
+        campMap[campName].leads += leads;
+    }});
+
+    // Get active campaign names (those with spend in last 3 days of range)
+    const allDatesInRange = [...new Set(ALL_DAILY_RAW.filter(r => r[0] >= fromDate && r[0] <= toDate).map(r => r[0]))].sort();
+    const last3 = new Set(allDatesInRange.slice(-3));
+    const recentSpend = {{}};
+    ALL_DAILY_RAW.forEach(r => {{
+        if (last3.has(r[0])) {{
+            recentSpend[r[1]] = (recentSpend[r[1]] || 0) + r[2];
+        }}
+    }});
+
+    // Filter: only active campaigns with leads > 0
+    const withLeads = Object.values(campMap).filter(c => c.leads > 0 && (recentSpend[c.name] || 0) > 0);
+    withLeads.forEach(c => {{ c.cpl = c.spend / c.leads; }});
+    withLeads.sort((a, b) => a.cpl - b.cpl);
+
+    const top3 = withLeads.slice(0, 3);
+    const bottom3 = withLeads.slice(-3).reverse();
+
+    function buildCards(list, isTop) {{
+        if (list.length === 0) return '<div style="color:#8892b0;padding:20px;text-align:center">Sin datos en este rango</div>';
+        const icon = isTop ? '&#9650;' : '&#9660;';
+        const color = isTop ? '#00d4aa' : '#ff6b6b';
+        return list.map((c, i) => {{
+            const cplDisp = fmtCOPFull(c.cpl);
+            const spendDisp = fmtCOPFull(c.spend);
+            return `<div class="performer-card" style="border-left:4px solid ${{color}}">`
+                + `<div class="performer-rank" style="color:${{color}}">${{icon}} #${{i+1}}</div>`
+                + `<div class="performer-name">${{c.name}}</div>`
+                + `<div class="performer-stats">`
+                + `<div class="performer-stat"><span class="stat-label">CPL</span><span class="stat-value" style="color:${{color}}">${{cplDisp}}</span></div>`
+                + `<div class="performer-stat"><span class="stat-label">Leads</span><span class="stat-value">${{c.leads}}</span></div>`
+                + `<div class="performer-stat"><span class="stat-label">Inversion</span><span class="stat-value">${{spendDisp}}</span></div>`
+                + `</div></div>`;
+        }}).join('');
+    }}
+
+    document.getElementById('topPerformersContainer').innerHTML = buildCards(top3, true);
+    document.getElementById('bottomPerformersContainer').innerHTML = buildCards(bottom3, false);
+}}
+
+function _fmtCOPTable(val) {{
+    return '$' + Math.round(val).toLocaleString('es-CO');
+}}
+
+function _objBadge(name) {{
+    const u = name.toUpperCase();
+    if (u.includes('TRAF')) return '<span class="badge badge-traffic">Trafico</span>';
+    if (u.includes('RECON') || u.includes('MENSAJES')) return '<span class="badge badge-awareness">Awareness</span>';
+    if (u.includes('FORM') || u.includes('LEAD')) return '<span class="badge badge-leads">Leads</span>';
+    return '<span class="badge badge-other">Otro</span>';
+}}
+
+function _statusBadge(isOn) {{
+    return isOn
+        ? '<span class="badge badge-leads" style="margin-left:6px">ON</span>'
+        : '<span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span>';
+}}
+
+function _cplClass(cpl, minCpl, maxCpl) {{
+    if (cpl <= 0) return '';
+    const ratio = maxCpl !== minCpl ? (cpl - minCpl) / (maxCpl - minCpl) : 0.5;
+    if (ratio < 0.33) return 'cpl-low';
+    if (ratio < 0.66) return 'cpl-mid';
+    return 'cpl-high';
+}}
+
+function updateCampaignTable(fromDate, toDate) {{
+    // Aggregate daily data by campaign in range
+    const campMap = {{}};
+    ALL_DAILY_RAW.forEach(r => {{
+        const [date, name, spend, leads, impr, clicks, reach] = r;
+        if (date < fromDate || date > toDate) return;
+        if (!campMap[name]) campMap[name] = {{name, spend:0, leads:0, impressions:0, clicks:0, reach:0}};
+        const c = campMap[name];
+        c.spend += spend; c.leads += leads; c.impressions += impr;
+        c.clicks += clicks; c.reach += reach;
+    }});
+
+    // Get active status (spend in last 3 days of range)
+    const datesInRange = [...new Set(ALL_DAILY_RAW.filter(r => r[0] >= fromDate && r[0] <= toDate).map(r => r[0]))].sort();
+    const last3Set = new Set(datesInRange.slice(-3));
+    const recentSpend = {{}};
+    ALL_DAILY_RAW.forEach(r => {{
+        if (last3Set.has(r[0])) recentSpend[r[1]] = (recentSpend[r[1]] || 0) + r[2];
+    }});
+
+    // Enrich with static fields from ALL_CAMPAIGNS
+    const campLookup = {{}};
+    ALL_CAMPAIGNS.forEach(c => {{ campLookup[c.name] = c; }});
+
+    let rows = Object.values(campMap).filter(c => c.spend > 0);
+    rows.forEach(c => {{
+        const ref = campLookup[c.name] || {{}};
+        c.cpl = c.leads > 0 ? c.spend / c.leads : 0;
+        c.ctr = c.impressions > 0 ? (c.clicks / c.impressions * 100) : 0;
+        c.link_clicks = ref.link_clicks || 0;
+        c.video_views = ref.video_views || 0;
+        c.is_active = (recentSpend[c.name] || 0) > 0;
+        c.objective = ref.objective || 'OTHER';
+    }});
+
+    // Sort: ON first, then by spend desc
+    rows.sort((a, b) => (a.is_active === b.is_active ? b.spend - a.spend : (a.is_active ? -1 : 1)));
+
+    const cpls = rows.filter(c => c.cpl > 0).map(c => c.cpl);
+    const minCpl = cpls.length ? Math.min(...cpls) : 0;
+    const maxCpl = cpls.length ? Math.max(...cpls) : 1;
+
+    const tbody = document.getElementById('campaignTableBody');
+    tbody.innerHTML = rows.map(c => {{
+        const rowStyle = c.is_active ? '' : ' style="opacity:0.45"';
+        const cplDisp = c.cpl > 0 ? _fmtCOPTable(c.cpl) : '-';
+        const spendDisp = _fmtCOPTable(c.spend);
+        return `<tr${{rowStyle}}>`
+            + `<td class="campaign-name">${{c.name}} ${{_objBadge(c.name)}} ${{_statusBadge(c.is_active)}}</td>`
+            + `<td class="num">${{spendDisp}}</td>`
+            + `<td class="num">${{c.impressions.toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{c.clicks.toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{c.ctr.toFixed(2)}}%</td>`
+            + `<td class="num">${{c.leads}}</td>`
+            + `<td class="num ${{_cplClass(c.cpl, minCpl, maxCpl)}}">${{cplDisp}}</td>`
+            + `<td class="num">${{c.link_clicks.toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{c.video_views.toLocaleString('es-CO')}}</td>`
+            + `</tr>`;
+    }}).join('');
+}}
+
+function updateAdsetTable(fromDate, toDate) {{
+    // Get campaigns active in date range
+    const campSpendInRange = {{}};
+    ALL_DAILY_RAW.forEach(r => {{
+        const [date, name, spend] = r;
+        if (date < fromDate || date > toDate) return;
+        campSpendInRange[name] = (campSpendInRange[name] || 0) + spend;
+    }});
+
+    // Get active status
+    const datesInRange = [...new Set(ALL_DAILY_RAW.filter(r => r[0] >= fromDate && r[0] <= toDate).map(r => r[0]))].sort();
+    const last3Set = new Set(datesInRange.slice(-3));
+    const recentSpend = {{}};
+    ALL_DAILY_RAW.forEach(r => {{
+        if (last3Set.has(r[0])) recentSpend[r[1]] = (recentSpend[r[1]] || 0) + r[2];
+    }});
+
+    // Filter adsets: only those whose parent campaign has data in range
+    const filtered = ALL_ADSETS.filter(a => (campSpendInRange[a.campaign_name] || 0) > 0);
+    filtered.forEach(a => {{ a._is_active = (recentSpend[a.campaign_name] || 0) > 0; }});
+
+    // Sort: ON first, then by spend desc
+    filtered.sort((a, b) => (a._is_active === b._is_active ? b.spend - a.spend : (a._is_active ? -1 : 1)));
+
+    const cpls = filtered.filter(a => a.cpl > 0).map(a => a.cpl);
+    const minCpl = cpls.length ? Math.min(...cpls) : 0;
+    const maxCpl = cpls.length ? Math.max(...cpls) : 1;
+
+    const tbody = document.getElementById('adsetTableBody');
+    tbody.innerHTML = filtered.map(a => {{
+        const isOn = a._is_active;
+        const rowStyle = isOn ? '' : ' style="opacity:0.45"';
+        const cplDisp = a.cpl > 0 ? _fmtCOPTable(a.cpl) : '-';
+        const spendDisp = _fmtCOPTable(a.spend);
+        return `<tr${{rowStyle}}>`
+            + `<td class="campaign-name">${{a.campaign_name}}</td>`
+            + `<td class="adset-name">${{a.name}} ${{_statusBadge(isOn)}}</td>`
+            + `<td class="num">${{spendDisp}}</td>`
+            + `<td class="num">${{a.impressions.toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{(a.clicks||0).toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{a.ctr.toFixed(2)}}%</td>`
+            + `<td class="num">${{a.leads}}</td>`
+            + `<td class="num ${{_cplClass(a.cpl, minCpl, maxCpl)}}">${{cplDisp}}</td>`
+            + `<td class="num">${{(a.link_clicks||0).toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{(a.video_views||0).toLocaleString('es-CO')}}</td>`
+            + `</tr>`;
+    }}).join('');
 }}
 
 function filterByDateRange() {{
@@ -2884,16 +3141,23 @@ function filterByDateRange() {{
 
     document.getElementById('kpi-spend').textContent = fmtCOPFull(totalSpend);
     document.getElementById('kpi-spend-sub').textContent = `COP (${{numDays}} dias)`;
-    document.getElementById('kpi-leads').textContent = totalLeads.toLocaleString('es-CO');
+    document.getElementById('kpi-leads').textContent = fmtNum(totalLeads);
     document.getElementById('kpi-cpl').textContent = fmtCOPFull(avgCPL);
-    document.getElementById('kpi-impressions').textContent = totalImpressions.toLocaleString('es-CO');
+    document.getElementById('kpi-impressions').textContent = fmtNum(totalImpressions);
     document.getElementById('kpi-cpm-sub').textContent = 'CPM: ' + fmtCOPFull(avgCPM);
     document.getElementById('kpi-ctr').textContent = avgCTR.toFixed(2) + '%';
-    document.getElementById('kpi-clicks-sub').textContent = totalClicks.toLocaleString('es-CO') + ' clics totales';
-    document.getElementById('kpi-reach').textContent = totalReach.toLocaleString('es-CO');
+    document.getElementById('kpi-clicks-sub').textContent = fmtNum(totalClicks) + ' clics totales';
+    document.getElementById('kpi-reach').textContent = fmtNum(totalReach);
 
     // Update date range display
     document.getElementById('dateRangeDisplay').textContent = fmtDateES(fromDate) + ' \u2014 ' + fmtDateES(toDate);
+
+    // Update performers (dynamic)
+    updatePerformers(fromDate, toDate);
+
+    // Update tables (dynamic)
+    updateCampaignTable(fromDate, toDate);
+    updateAdsetTable(fromDate, toDate);
 }}
 
 // Attach date picker events
@@ -2922,11 +3186,11 @@ function filterSource(source) {{
 
     if (source === 'meta') {{
         metaSections.forEach(s => s.classList.remove('section-hidden'));
-        ventasSections.forEach(s => s.classList.remove('section-hidden'));
+        ventasSections.forEach(s => s.classList.add('section-hidden'));
         sheetSections.forEach(s => s.classList.add('section-hidden'));
     }} else if (source === 'sheet') {{
         metaSections.forEach(s => s.classList.add('section-hidden'));
-        ventasSections.forEach(s => s.classList.add('section-hidden'));
+        ventasSections.forEach(s => s.classList.remove('section-hidden'));
         sheetSections.forEach(s => s.classList.remove('section-hidden'));
     }} else {{
         // ambos
@@ -2955,9 +3219,7 @@ function filterVentas(mes) {{
     const medianDias = metaDias.length > 0 ? metaDias.sort((a,b)=>a-b)[Math.floor(metaDias.length/2)] : 0;
     const avgDias = metaDias.length > 0 ? metaDias.reduce((a,b)=>a+b,0)/metaDias.length : 0;
 
-    // Get current ads spend for ROAS calc
-    const spendText = document.getElementById('kpi-spend').textContent;
-    const currentSpend = parseFloat(spendText.replace(/[$.,]/g,'')) || {total_spend};
+    // Get current ads spend for ROAS calc (use actual calculated value)\n    const currentSpend = (function() {{\n        const from = document.getElementById('dateFrom').value;\n        const to = document.getElementById('dateTo').value;\n        const s = ALL_DATES.findIndex(d => d >= from);\n        const eIdx = ALL_DATES.findIndex(d => d > to);\n        const e = eIdx === -1 ? ALL_DATES.length : eIdx;\n        return ALL_SPEND.slice(s === -1 ? 0 : s, e).reduce((a,b) => a+b, 0);\n    }})() || {total_spend};
     const roas = currentSpend > 0 ? metaRevenue / currentSpend : 0;
     const cpv = metaCount > 0 ? currentSpend / metaCount : 0;
 
@@ -3315,9 +3577,54 @@ async function refreshAnalysis() {{
     }}
 }}
 
+// ── REFRESH DATA (Meta Ads + Google Sheets + Rebuild) ──
+async function refreshData() {{
+    const btn = document.getElementById('btnRefreshData');
+    const updatedEl = document.getElementById('lastUpdated');
+    const origText = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Refrescando...';
+
+    // Create or show log element
+    let logEl = document.getElementById('refreshLog');
+    if (!logEl) {{
+        logEl = document.createElement('div');
+        logEl.id = 'refreshLog';
+        logEl.className = 'refresh-log';
+        btn.parentElement.appendChild(logEl);
+    }}
+    logEl.style.display = 'block';
+    logEl.textContent = 'Iniciando refresh de datos...\\n';
+
+    try {{
+        const resp = await fetch('/api/refresh');
+        const data = await resp.json();
+
+        logEl.textContent = data.log || 'Sin log disponible';
+
+        if (data.ok) {{
+            updatedEl.textContent = 'Ultima actualizacion: ' + data.timestamp;
+            logEl.textContent += '\\n\\n✅ Recargando pagina en 3s...';
+            setTimeout(() => window.location.reload(), 3000);
+        }} else {{
+            logEl.textContent += '\\n\\n⚠️ Hubo errores. Revisa el log arriba.';
+            btn.disabled = false;
+            btn.innerHTML = origText;
+        }}
+    }} catch (e) {{
+        logEl.textContent = '❌ Error de conexion: ' + e.message + '\\n\\n';
+        logEl.textContent += 'Asegurate de estar usando server.py:\\n';
+        logEl.textContent += '  python3 server.py\\n';
+        logEl.textContent += '\\n(El servidor simple de Python no soporta /api/refresh)';
+        btn.disabled = false;
+        btn.innerHTML = origText;
+    }}
+}}
+
 </script>
 </body>
-</html>"""
+</html>""" 
 
 # ── Write output ────────────────────────────────────────────────────────────
 with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
