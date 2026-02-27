@@ -20,6 +20,7 @@ BASE_URL = f"https://graph.facebook.com/{API_VERSION}"
 AD_INSIGHTS_FILE = os.path.join(SCRIPT_DIR, "ad_insights.json")
 DAILY_INSIGHTS_FILE = os.path.join(SCRIPT_DIR, "daily_insights.json")
 ADSET_INSIGHTS_FILE = os.path.join(SCRIPT_DIR, "adset_insights.json")
+DAILY_ADSET_INSIGHTS_FILE = os.path.join(SCRIPT_DIR, "daily_adset_insights.json")
 
 # Date range: last 30 days
 DATE_END = datetime.now().strftime("%Y-%m-%d")
@@ -41,6 +42,12 @@ FIELDS_ADSET = ",".join([
     "campaign_name", "adset_id", "adset_name",
     "impressions", "clicks", "spend", "cpc", "cpm", "ctr",
     "reach", "frequency", "actions", "cost_per_action_type"
+])
+
+FIELDS_ADSET_DAILY = ",".join([
+    "campaign_name", "adset_id", "adset_name",
+    "impressions", "clicks", "spend", "cpm", "ctr",
+    "reach", "actions"
 ])
 
 
@@ -140,6 +147,25 @@ def fetch_adset_insights():
     return True
 
 
+def fetch_daily_adset_insights():
+    """Fetch adset-level daily insights."""
+    print(f"  Fetching daily adset insights ({DATE_START} → {DATE_END})...")
+    result = api_call(f"{AD_ACCOUNT_ID}/insights", {
+        "level": "adset",
+        "fields": FIELDS_ADSET_DAILY,
+        "time_range": json.dumps({"since": DATE_START, "until": DATE_END}),
+        "time_increment": "1",
+        "limit": "500"
+    })
+    with open(DAILY_ADSET_INSIGHTS_FILE, "w") as f:
+        json.dump(result, f, indent=2)
+    dates = sorted(set(r.get("date_start", "") for r in result["data"]))
+    adsets = set(r.get("adset_name", "") for r in result["data"])
+    print(f"    ✅ {len(result['data'])} daily adset records ({len(adsets)} adsets, "
+          f"{len(dates)} days) → daily_adset_insights.json")
+    return True
+
+
 def main():
     print(f"=== Refreshing Meta Ads Data ===")
     print(f"Account: {AD_ACCOUNT_ID}")
@@ -163,6 +189,12 @@ def main():
         fetch_adset_insights()
     except Exception as e:
         print(f"    ❌ adset insights error: {e}")
+        ok = False
+
+    try:
+        fetch_daily_adset_insights()
+    except Exception as e:
+        print(f"    ❌ daily adset insights error: {e}")
         ok = False
 
     if ok:

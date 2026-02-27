@@ -22,6 +22,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CAMPAIGN_FILE = os.path.join(SCRIPT_DIR, "ad_insights.json")
 DAILY_FILE = os.path.join(SCRIPT_DIR, "daily_insights.json")
 ADSET_FILE = os.path.join(SCRIPT_DIR, "adset_insights.json")
+DAILY_ADSET_FILE = os.path.join(SCRIPT_DIR, "daily_adset_insights.json")
 VENTAS_FILE = os.path.join(SCRIPT_DIR, "ventas_2026.csv")
 RESUMEN_FILE = os.path.join(SCRIPT_DIR, "resumen_gsheet.csv")
 OUTPUT_FILE = os.path.join(SCRIPT_DIR, "dashboard.html")
@@ -295,6 +296,7 @@ print("Loading data files...")
 campaign_raw = load_json(CAMPAIGN_FILE)
 daily_raw = load_json(DAILY_FILE)
 adset_raw = load_json(ADSET_FILE)
+daily_adset_raw = load_json(DAILY_ADSET_FILE) if os.path.exists(DAILY_ADSET_FILE) else {"data": []}
 ventas_raw = load_ventas(VENTAS_FILE)
 resumen_raw = load_resumen(RESUMEN_FILE)
 
@@ -1318,9 +1320,25 @@ _daily_raw_js = json.dumps([
         int(sum(int(a['value']) for a in r.get('actions', []) if a['action_type'] == 'lead')),
         int(r.get('impressions', 0)), int(r.get('clicks', 0)),
         int(r.get('reach', 0)), round(float(r.get('ctr', 0)), 2),
-        round(float(r.get('cpm', 0)))
+        round(float(r.get('cpm', 0))),
+        int(sum(int(a['value']) for a in r.get('actions', []) if a['action_type'] == 'link_click')),
+        int(sum(int(a['value']) for a in r.get('actions', []) if a['action_type'] == 'video_view'))
     ]
     for r in sorted(daily_raw['data'], key=lambda x: x['date_start'])
+])
+
+# Per-adset daily data (compact: [date, campaign_name, adset_name, spend, leads, impressions, clicks, reach, link_clicks, video_views])
+_daily_adset_raw_js = json.dumps([
+    [
+        r['date_start'], r.get('campaign_name', ''), r.get('adset_name', ''),
+        round(float(r.get('spend', 0))),
+        int(sum(int(a['value']) for a in r.get('actions', []) if a['action_type'] == 'lead')),
+        int(r.get('impressions', 0)), int(r.get('clicks', 0)),
+        int(r.get('reach', 0)),
+        int(sum(int(a['value']) for a in r.get('actions', []) if a['action_type'] == 'link_click')),
+        int(sum(int(a['value']) for a in r.get('actions', []) if a['action_type'] == 'video_view'))
+    ]
+    for r in sorted(daily_adset_raw['data'], key=lambda x: x['date_start'])
 ])
 
 html = f"""<!DOCTYPE html>
@@ -2559,8 +2577,12 @@ const ALL_CAMPAIGNS = {_campaigns_js};
 
 const ALL_ADSETS = {_adsets_js};
 
-// Per-campaign daily data (compact: [date, campaign_name, spend, leads, impressions, clicks, reach, ctr, cpm])
+// Per-campaign daily data (compact: [date, campaign_name, spend, leads, impressions, clicks, reach, ctr, cpm, link_clicks, video_views])
 const ALL_DAILY_RAW = {_daily_raw_js};
+
+// Per-adset daily data (compact: [date, campaign_name, adset_name, spend, leads, impressions, clicks, reach, link_clicks, video_views])
+const ALL_ADSET_DAILY_RAW = {_daily_adset_raw_js};
+
 // Mutable working arrays
 let dailyLabels = [...ALL_LABELS];
 let dailySpend = [...ALL_SPEND];
@@ -2978,15 +3000,17 @@ function _cplClass(cpl, minCpl, maxCpl) {{
 }}
 
 function updateCampaignTable(fromDate, toDate) {{
-    // Aggregate daily data by campaign in range
+    // Aggregate daily data by campaign in range (ALL_DAILY_RAW: [date, name, spend, leads, impr, clicks, reach, ctr, cpm, link_clicks, video_views])
     const campMap = {{}};
     ALL_DAILY_RAW.forEach(r => {{
-        const [date, name, spend, leads, impr, clicks, reach] = r;
+        const [date, name, spend, leads, impr, clicks, reach, ctr, cpm, link_clicks, video_views] = r;
         if (date < fromDate || date > toDate) return;
-        if (!campMap[name]) campMap[name] = {{name, spend:0, leads:0, impressions:0, clicks:0, reach:0}};
+        if (!campMap[name]) campMap[name] = {{name, spend:0, leads:0, impressions:0, clicks:0, reach:0, link_clicks:0, video_views:0}};
         const c = campMap[name];
         c.spend += spend; c.leads += leads; c.impressions += impr;
         c.clicks += clicks; c.reach += reach;
+        c.link_clicks += (link_clicks || 0);
+        c.video_views += (video_views || 0);
     }});
 
     // Get active status (spend in last 3 days of range)
@@ -2997,7 +3021,7 @@ function updateCampaignTable(fromDate, toDate) {{
         if (last3Set.has(r[0])) recentSpend[r[1]] = (recentSpend[r[1]] || 0) + r[2];
     }});
 
-    // Enrich with static fields from ALL_CAMPAIGNS
+    // Get objective from ALL_CAMPAIGNS
     const campLookup = {{}};
     ALL_CAMPAIGNS.forEach(c => {{ campLookup[c.name] = c; }});
 
@@ -3006,8 +3030,6 @@ function updateCampaignTable(fromDate, toDate) {{
         const ref = campLookup[c.name] || {{}};
         c.cpl = c.leads > 0 ? c.spend / c.leads : 0;
         c.ctr = c.impressions > 0 ? (c.clicks / c.impressions * 100) : 0;
-        c.link_clicks = ref.link_clicks || 0;
-        c.video_views = ref.video_views || 0;
         c.is_active = (recentSpend[c.name] || 0) > 0;
         c.objective = ref.objective || 'OTHER';
     }});
@@ -3039,36 +3061,49 @@ function updateCampaignTable(fromDate, toDate) {{
 }}
 
 function updateAdsetTable(fromDate, toDate) {{
-    // Get campaigns active in date range
-    const campSpendInRange = {{}};
-    ALL_DAILY_RAW.forEach(r => {{
-        const [date, name, spend] = r;
+    // Aggregate daily adset data in range (ALL_ADSET_DAILY_RAW: [date, campaign_name, adset_name, spend, leads, impr, clicks, reach, link_clicks, video_views])
+    const adsetMap = {{}};
+    ALL_ADSET_DAILY_RAW.forEach(r => {{
+        const [date, campName, adsetName, spend, leads, impr, clicks, reach, link_clicks, video_views] = r;
         if (date < fromDate || date > toDate) return;
-        campSpendInRange[name] = (campSpendInRange[name] || 0) + spend;
+        const key = campName + '|' + adsetName;
+        if (!adsetMap[key]) adsetMap[key] = {{campaign_name: campName, name: adsetName, spend:0, leads:0, impressions:0, clicks:0, reach:0, link_clicks:0, video_views:0}};
+        const a = adsetMap[key];
+        a.spend += spend; a.leads += leads; a.impressions += impr;
+        a.clicks += clicks; a.reach += reach;
+        a.link_clicks += (link_clicks || 0);
+        a.video_views += (video_views || 0);
     }});
 
-    // Get active status
-    const datesInRange = [...new Set(ALL_DAILY_RAW.filter(r => r[0] >= fromDate && r[0] <= toDate).map(r => r[0]))].sort();
+    // Get active status (campaign spend in last 3 days of range)
+    const datesInRange = [...new Set(ALL_ADSET_DAILY_RAW.filter(r => r[0] >= fromDate && r[0] <= toDate).map(r => r[0]))].sort();
     const last3Set = new Set(datesInRange.slice(-3));
     const recentSpend = {{}};
-    ALL_DAILY_RAW.forEach(r => {{
-        if (last3Set.has(r[0])) recentSpend[r[1]] = (recentSpend[r[1]] || 0) + r[2];
+    ALL_ADSET_DAILY_RAW.forEach(r => {{
+        if (last3Set.has(r[0])) {{
+            const key = r[1] + '|' + r[2];
+            recentSpend[key] = (recentSpend[key] || 0) + r[3];
+        }}
     }});
 
-    // Filter adsets: only those whose parent campaign has data in range
-    const filtered = ALL_ADSETS.filter(a => (campSpendInRange[a.campaign_name] || 0) > 0);
-    filtered.forEach(a => {{ a._is_active = (recentSpend[a.campaign_name] || 0) > 0; }});
+    let rows = Object.values(adsetMap).filter(a => a.spend > 0);
+    rows.forEach(a => {{
+        a.cpl = a.leads > 0 ? a.spend / a.leads : 0;
+        a.ctr = a.impressions > 0 ? (a.clicks / a.impressions * 100) : 0;
+        const key = a.campaign_name + '|' + a.name;
+        a.is_active = (recentSpend[key] || 0) > 0;
+    }});
 
     // Sort: ON first, then by spend desc
-    filtered.sort((a, b) => (a._is_active === b._is_active ? b.spend - a.spend : (a._is_active ? -1 : 1)));
+    rows.sort((a, b) => (a.is_active === b.is_active ? b.spend - a.spend : (a.is_active ? -1 : 1)));
 
-    const cpls = filtered.filter(a => a.cpl > 0).map(a => a.cpl);
+    const cpls = rows.filter(a => a.cpl > 0).map(a => a.cpl);
     const minCpl = cpls.length ? Math.min(...cpls) : 0;
     const maxCpl = cpls.length ? Math.max(...cpls) : 1;
 
     const tbody = document.getElementById('adsetTableBody');
-    tbody.innerHTML = filtered.map(a => {{
-        const isOn = a._is_active;
+    tbody.innerHTML = rows.map(a => {{
+        const isOn = a.is_active;
         const rowStyle = isOn ? '' : ' style="opacity:0.45"';
         const cplDisp = a.cpl > 0 ? _fmtCOPTable(a.cpl) : '-';
         const spendDisp = _fmtCOPTable(a.spend);
@@ -3077,12 +3112,12 @@ function updateAdsetTable(fromDate, toDate) {{
             + `<td class="adset-name">${{a.name}} ${{_statusBadge(isOn)}}</td>`
             + `<td class="num">${{spendDisp}}</td>`
             + `<td class="num">${{a.impressions.toLocaleString('es-CO')}}</td>`
-            + `<td class="num">${{(a.clicks||0).toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{a.clicks.toLocaleString('es-CO')}}</td>`
             + `<td class="num">${{a.ctr.toFixed(2)}}%</td>`
             + `<td class="num">${{a.leads}}</td>`
             + `<td class="num ${{_cplClass(a.cpl, minCpl, maxCpl)}}">${{cplDisp}}</td>`
-            + `<td class="num">${{(a.link_clicks||0).toLocaleString('es-CO')}}</td>`
-            + `<td class="num">${{(a.video_views||0).toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{a.link_clicks.toLocaleString('es-CO')}}</td>`
+            + `<td class="num">${{a.video_views.toLocaleString('es-CO')}}</td>`
             + `</tr>`;
     }}).join('');
 }}
@@ -3163,6 +3198,9 @@ function filterByDateRange() {{
 // Attach date picker events
 document.getElementById('dateFrom').addEventListener('change', filterByDateRange);
 document.getElementById('dateTo').addEventListener('change', filterByDateRange);
+
+// Initial call to apply date range on page load
+filterByDateRange();
 
 // Open calendar on click anywhere in the input
 document.querySelectorAll('.date-range-picker input[type="date"]').forEach(inp => {{
