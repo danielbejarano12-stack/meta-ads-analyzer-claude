@@ -699,7 +699,7 @@ tbody tr:hover {
         </div>
         <div class="header-right">
             <div class="date-range">28 Ene 2026 &mdash; 26 Feb 2026</div>
-            <div class="updated">Ultima actualizacion: 27/02/2026 12:21</div>
+            <div class="updated">Ultima actualizacion: 27/02/2026 13:02</div>
         </div>
     </div>
 </div>
@@ -784,14 +784,68 @@ tbody tr:hover {
     </div>
 </div>
 
-<!-- AI-POWERED ANALYSIS (dynamic) -->
+<!-- AI-POWERED ANALYSIS (OpenAI) -->
 <div class="analysis-section" id="analysisSection">
-    <div class="section-title"><span class="icon">&#129504;</span> Analisis IA &mdash; Insights Automaticos</div>
-    <div style="font-size:11px;color:var(--text-muted);margin:-12px 0 16px 0;" id="analysisTimestamp">
-        Generando analisis...
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div class="section-title" style="margin-bottom:0"><span class="icon">&#129504;</span> Analisis IA &mdash; Insights Automaticos</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <button onclick="togglePrompt()" class="filter-btn" style="font-size:11px;padding:6px 14px;opacity:0.7;" title="Ver prompt enviado a OpenAI">
+                &#128065; Ver Prompt
+            </button>
+            <button onclick="refreshAnalysis()" id="btnRefreshAI" class="filter-btn source-btn" style="background:var(--gradient-1);color:#fff;border:none;font-size:12px;padding:8px 18px;cursor:pointer;" title="Regenerar analisis con OpenAI">
+                &#9889; Actualizar Analisis
+            </button>
+        </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin:4px 0 16px 0;" id="analysisTimestamp">
+        Generado por OpenAI (gpt-4o-mini) | Datos: Meta Ads API | 27/02/2026 13:02
+    </div>
+    <!-- Prompt viewer (hidden by default) -->
+    <div id="promptViewer" style="display:none;margin-bottom:20px;background:var(--bg-card-alt);border:1px solid var(--border-color);border-radius:12px;padding:16px;max-height:400px;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h4 style="color:var(--accent-cyan);margin:0;">&#128221; Prompt enviado a OpenAI</h4>
+            <button onclick="togglePrompt()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">&#10005;</button>
+        </div>
+        <div style="margin-bottom:12px;">
+            <div style="color:var(--accent-purple);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">System Prompt</div>
+            <pre id="systemPromptText" style="white-space:pre-wrap;font-size:11px;color:var(--text-secondary);line-height:1.5;margin:0;font-family:inherit;"></pre>
+        </div>
+        <div>
+            <div style="color:var(--accent-blue);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">User Prompt (datos enviados)</div>
+            <pre id="userPromptText" style="white-space:pre-wrap;font-size:11px;color:var(--text-secondary);line-height:1.5;margin:0;font-family:inherit;"></pre>
+        </div>
     </div>
     <div class="analysis-grid" id="analysisGrid">
-        <!-- populated by JS -->
+        <div class="analysis-card positive">
+            <div class="analysis-card-header"><span class="analysis-icon">&#9989;</span><h3>Lo Positivo</h3></div>
+            <div class="analysis-item"><span class="analysis-bullet"></span><span>El CPL promedio de <span class="analysis-highlight">$5,729</span> COP es competitivo frente al benchmark de <span class="analysis-highlight">$8,000</span> - <span class="analysis-highlight">$25,000</span> COP en el sector inmobiliario.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Con un <span class="analysis-highlight">CTR de 3.30%</span>, se encuentra por encima del promedio del sector, que es de <span class="analysis-highlight">0.9%</span> - <span class="analysis-highlight">1.5%</span>.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>El CPM de <span class="analysis-highlight">$6,257</span> COP está dentro del rango del benchmark de <span class="analysis-highlight">$5,000</span> - <span class="analysis-highlight">$12,000</span> COP, lo que indica un costo razonable por impresión.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La frecuencia promedio de 1.82 en las campañas activas es ideal, ya que se mantiene por debajo del umbral de 2.5, lo que evita la saturación.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>El engagement total de 380,674 demuestra un buen nivel de interacción con los anuncios, lo que puede ayudar a aumentar el reconocimiento de marca.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La campaña 20/10/25_CP_EVENTO26OCT_FORM muestra un <span class="analysis-highlight">CPL de $3,861,</span> lo cual es bastante efectivo comparado con otras campañas.</span></div>
+
+        </div>
+        <div class="analysis-card warning">
+            <div class="analysis-card-header"><span class="analysis-icon">&#9888;&#65039;</span><h3>A Vigilar</h3></div>
+            <div class="analysis-item"><span class="analysis-bullet"></span><span>La campaña 31/10/25_RECON_MENSAJESIG tiene un CPL extremadamente alto de <span class="analysis-highlight">$298,914,</span> lo que indica un problema de eficiencia en la generación de leads.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La última semana mostró un aumento en el CPL a <span class="analysis-highlight">$3,231,</span> un incremento respecto a la semana anterior de <span class="analysis-highlight">$9,181,</span> lo que puede señalar una tendencia a vigilar.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>El conjunto 22/11/25_TRAFGRAL_WEB tiene un <span class="analysis-highlight">CTR del 17.82%</span> pero no ha generado leads, lo que indica un posible problema de calidad en el tráfico.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La tendencia diaria muestra fluctuaciones en el CPL y CPM, particularmente el 2026-02-26 donde el CPM alcanzó <span class="analysis-highlight">$12,677,</span> lo que puede afectar el presupuesto.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La campaña 31/10/25_TRAF_IG no ha generado leads a pesar de un CTR alto, lo que podría ser una señal de falta de relevancia para la audiencia.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>El hecho de que 6 de 20 campañas estén pausadas puede indicar que algunas no están generando resultados satisfactorios, lo que podría afectar el aprendizaje del sistema.</span></div>
+
+        </div>
+        <div class="analysis-card recommend">
+            <div class="analysis-card-header"><span class="analysis-icon">&#128161;</span><h3>Recomendaciones</h3></div>
+            <div class="analysis-item"><span class="analysis-bullet"></span><span>Revisar y optimizar la campaña 31/10/25_RECON_MENSAJESIG para disminuir el CPL, posiblemente ajustando la segmentación o el contenido del anuncio.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Aumentar el presupuesto en la campaña 20/10/25_CP_EVENTO26OCT_FORM, que ha demostrado eficiencia con un CPL bajo de <span class="analysis-highlight">$3,861</span> y un buen número de leads.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Evaluar los anuncios con bajo rendimiento como 31/10/25_TRAF_IG y 22/11/25_TRAFGRAL_WEB, y considerar pausarlos o modificar su contenido y segmentación.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Implementar pruebas A/B con creativos nuevos en las campañas que están en la fase de aprendizaje para mejorar el rendimiento y evitar la fatiga creativa.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Monitorear la frecuencia de las campañas activas y, si se acerca a 2.5, considerar rotar creativos para mantener el interés del público.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Aprovechar el alto engagement de 380,674 para crear anuncios que fomenten la interacción directa, como encuestas o comentarios, para seguir con la conversación con la audiencia.</span></div>
+
+        </div>
     </div>
 </div>
 
@@ -1848,7 +1902,7 @@ tbody tr:hover {
                 <tbody>
                     <tr>
             <td class="campaign-name">18/11/25_CP_PRUEBACA_FORM</td>
-            <td class="adset-name">ABIERTO V1</td>
+            <td class="adset-name">ABIERTO V1 <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$2.650.900</td>
             <td class="num">161,073</td>
             <td class="num">7,123</td>
@@ -1860,7 +1914,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$1.705.214</td>
             <td class="num">155,931</td>
             <td class="num">7,838</td>
@@ -1872,7 +1926,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">20/10/25_CP_EVENTO26OCT_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$1.548.236</td>
             <td class="num">311,312</td>
             <td class="num">4,971</td>
@@ -1884,7 +1938,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">26/03/25 FORM META PRUEBAS</td>
-            <td class="adset-name">ABIERTO CTG FORM SIMPLE</td>
+            <td class="adset-name">ABIERTO CTG FORM SIMPLE <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$691.053</td>
             <td class="num">89,941</td>
             <td class="num">2,683</td>
@@ -1896,7 +1950,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">29/10/25_GENERALOCT_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$395.241</td>
             <td class="num">46,877</td>
             <td class="num">1,027</td>
@@ -1908,7 +1962,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">31/10/25_RECON_MENSAJESIG</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$298.914</td>
             <td class="num">435,150</td>
             <td class="num">3,897</td>
@@ -1920,7 +1974,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">31/10/25_TRAF_IG</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$297.922</td>
             <td class="num">68,077</td>
             <td class="num">4,780</td>
@@ -1932,7 +1986,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">22/11/25_TRAFGRAL_WEB</td>
-            <td class="adset-name">SEMI ABIERTO</td>
+            <td class="adset-name">SEMI ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$293.801</td>
             <td class="num">74,191</td>
             <td class="num">13,219</td>
@@ -1944,7 +1998,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">14/01/26_CP_VIDEOSENE_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
+            <td class="adset-name">SEGMENTADO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$288.372</td>
             <td class="num">21,829</td>
             <td class="num">750</td>
@@ -1956,7 +2010,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
+            <td class="adset-name">SEGMENTADO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$230.912</td>
             <td class="num">33,956</td>
             <td class="num">935</td>
@@ -1968,7 +2022,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">04/02/26_CP_VIDEOSESTRATEGY_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$210.162</td>
             <td class="num">30,924</td>
             <td class="num">786</td>
@@ -1980,7 +2034,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">08/02/26_CP_VIDEOS_FORM PREG</td>
-            <td class="adset-name">SEGMENTADO</td>
+            <td class="adset-name">SEGMENTADO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$181.215</td>
             <td class="num">20,143</td>
             <td class="num">472</td>
@@ -1992,7 +2046,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">13/02/26_CP_2PREGU_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
+            <td class="adset-name">SEGMENTADO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$136.260</td>
             <td class="num">18,438</td>
             <td class="num">386</td>
@@ -2003,80 +2057,8 @@ tbody tr:hover {
             <td class="num">4,379</td>
         </tr>
 <tr>
-            <td class="campaign-name">28/11/25_CP_GENERALNOV_FORM</td>
-            <td class="adset-name">SEMI ABIERTO</td>
-            <td class="num">$104.179</td>
-            <td class="num">13,347</td>
-            <td class="num">245</td>
-            <td class="num">1.84%</td>
-            <td class="num">27</td>
-            <td class="num cpl-low">$3.858</td>
-            <td class="num">98</td>
-            <td class="num">3,540</td>
-        </tr>
-<tr>
-            <td class="campaign-name">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$104.067</td>
-            <td class="num">6,254</td>
-            <td class="num">281</td>
-            <td class="num">4.49%</td>
-            <td class="num">18</td>
-            <td class="num cpl-low">$5.782</td>
-            <td class="num">170</td>
-            <td class="num">1,959</td>
-        </tr>
-<tr>
-            <td class="campaign-name">24/09/2025_CP_VIDEOSSEPT_FORM</td>
-            <td class="adset-name">ABIERTO</td>
-            <td class="num">$103.311</td>
-            <td class="num">7,173</td>
-            <td class="num">242</td>
-            <td class="num">3.37%</td>
-            <td class="num">26</td>
-            <td class="num cpl-low">$3.974</td>
-            <td class="num">134</td>
-            <td class="num">2,236</td>
-        </tr>
-<tr>
-            <td class="campaign-name">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
-            <td class="num">$80.176</td>
-            <td class="num">4,742</td>
-            <td class="num">152</td>
-            <td class="num">3.21%</td>
-            <td class="num">7</td>
-            <td class="num cpl-low">$11.454</td>
-            <td class="num">104</td>
-            <td class="num">1,330</td>
-        </tr>
-<tr>
-            <td class="campaign-name">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
-            <td class="adset-name">REMARKETING</td>
-            <td class="num">$75.952</td>
-            <td class="num">4,888</td>
-            <td class="num">200</td>
-            <td class="num">4.09%</td>
-            <td class="num">8</td>
-            <td class="num cpl-low">$9.494</td>
-            <td class="num">144</td>
-            <td class="num">1,305</td>
-        </tr>
-<tr>
-            <td class="campaign-name">28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1</td>
-            <td class="adset-name">SEGMENTADO 1ERA VIVIENDA</td>
-            <td class="num">$19.908</td>
-            <td class="num">3,663</td>
-            <td class="num">46</td>
-            <td class="num">1.26%</td>
-            <td class="num">2</td>
-            <td class="num cpl-low">$9.954</td>
-            <td class="num">23</td>
-            <td class="num">836</td>
-        </tr>
-<tr>
             <td class="campaign-name">24/02/26_CP_BESTSELLER_FORMVERIF</td>
-            <td class="adset-name">SEGMENTADO</td>
+            <td class="adset-name">SEGMENTADO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$19.012</td>
             <td class="num">1,441</td>
             <td class="num">39</td>
@@ -2087,32 +2069,8 @@ tbody tr:hover {
             <td class="num">367</td>
         </tr>
 <tr>
-            <td class="campaign-name">CP_24/07/2025_VIDEOSCOOL_FORM</td>
-            <td class="adset-name">SIMILAR</td>
-            <td class="num">$18.089</td>
-            <td class="num">2,800</td>
-            <td class="num">57</td>
-            <td class="num">2.04%</td>
-            <td class="num">2</td>
-            <td class="num cpl-low">$9.044</td>
-            <td class="num">30</td>
-            <td class="num">883</td>
-        </tr>
-<tr>
-            <td class="campaign-name">CP_24/07/2025_VIDEOSCOOL_FORM</td>
-            <td class="adset-name">INTERESES</td>
-            <td class="num">$17.389</td>
-            <td class="num">3,739</td>
-            <td class="num">50</td>
-            <td class="num">1.34%</td>
-            <td class="num">6</td>
-            <td class="num cpl-low">$2.898</td>
-            <td class="num">20</td>
-            <td class="num">898</td>
-        </tr>
-<tr>
             <td class="campaign-name">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$16.515</td>
             <td class="num">3,170</td>
             <td class="num">71</td>
@@ -2123,20 +2081,8 @@ tbody tr:hover {
             <td class="num">642</td>
         </tr>
 <tr>
-            <td class="campaign-name">28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1</td>
-            <td class="adset-name">SEGMENTADO PADRES</td>
-            <td class="num">$15.316</td>
-            <td class="num">3,130</td>
-            <td class="num">29</td>
-            <td class="num">0.93%</td>
-            <td class="num">2</td>
-            <td class="num cpl-low">$7.658</td>
-            <td class="num">14</td>
-            <td class="num">702</td>
-        </tr>
-<tr>
             <td class="campaign-name">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$14.688</td>
             <td class="num">1,409</td>
             <td class="num">24</td>
@@ -2148,7 +2094,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$14.558</td>
             <td class="num">1,997</td>
             <td class="num">52</td>
@@ -2160,7 +2106,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$14.339</td>
             <td class="num">1,420</td>
             <td class="num">22</td>
@@ -2172,7 +2118,7 @@ tbody tr:hover {
         </tr>
 <tr>
             <td class="campaign-name">24/02/26_CP_1CA1A_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge badge-leads" style="margin-left:6px">ON</span></td>
             <td class="num">$14.258</td>
             <td class="num">1,594</td>
             <td class="num">25</td>
@@ -2182,9 +2128,117 @@ tbody tr:hover {
             <td class="num">11</td>
             <td class="num">580</td>
         </tr>
-<tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">28/11/25_CP_GENERALNOV_FORM</td>
+            <td class="adset-name">SEMI ABIERTO <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$104.179</td>
+            <td class="num">13,347</td>
+            <td class="num">245</td>
+            <td class="num">1.84%</td>
+            <td class="num">27</td>
+            <td class="num cpl-low">$3.858</td>
+            <td class="num">98</td>
+            <td class="num">3,540</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
+            <td class="adset-name">ABIERTO <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$104.067</td>
+            <td class="num">6,254</td>
+            <td class="num">281</td>
+            <td class="num">4.49%</td>
+            <td class="num">18</td>
+            <td class="num cpl-low">$5.782</td>
+            <td class="num">170</td>
+            <td class="num">1,959</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">24/09/2025_CP_VIDEOSSEPT_FORM</td>
+            <td class="adset-name">ABIERTO <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$103.311</td>
+            <td class="num">7,173</td>
+            <td class="num">242</td>
+            <td class="num">3.37%</td>
+            <td class="num">26</td>
+            <td class="num cpl-low">$3.974</td>
+            <td class="num">134</td>
+            <td class="num">2,236</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
+            <td class="adset-name">SEGMENTADO <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$80.176</td>
+            <td class="num">4,742</td>
+            <td class="num">152</td>
+            <td class="num">3.21%</td>
+            <td class="num">7</td>
+            <td class="num cpl-low">$11.454</td>
+            <td class="num">104</td>
+            <td class="num">1,330</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM</td>
+            <td class="adset-name">REMARKETING <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$75.952</td>
+            <td class="num">4,888</td>
+            <td class="num">200</td>
+            <td class="num">4.09%</td>
+            <td class="num">8</td>
+            <td class="num cpl-low">$9.494</td>
+            <td class="num">144</td>
+            <td class="num">1,305</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1</td>
+            <td class="adset-name">SEGMENTADO 1ERA VIVIENDA <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$19.908</td>
+            <td class="num">3,663</td>
+            <td class="num">46</td>
+            <td class="num">1.26%</td>
+            <td class="num">2</td>
+            <td class="num cpl-low">$9.954</td>
+            <td class="num">23</td>
+            <td class="num">836</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">CP_24/07/2025_VIDEOSCOOL_FORM</td>
+            <td class="adset-name">SIMILAR <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$18.089</td>
+            <td class="num">2,800</td>
+            <td class="num">57</td>
+            <td class="num">2.04%</td>
+            <td class="num">2</td>
+            <td class="num cpl-low">$9.044</td>
+            <td class="num">30</td>
+            <td class="num">883</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">CP_24/07/2025_VIDEOSCOOL_FORM</td>
+            <td class="adset-name">INTERESES <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$17.389</td>
+            <td class="num">3,739</td>
+            <td class="num">50</td>
+            <td class="num">1.34%</td>
+            <td class="num">6</td>
+            <td class="num cpl-low">$2.898</td>
+            <td class="num">20</td>
+            <td class="num">898</td>
+        </tr>
+<tr style="opacity:0.45">
+            <td class="campaign-name">28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1</td>
+            <td class="adset-name">SEGMENTADO PADRES <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
+            <td class="num">$15.316</td>
+            <td class="num">3,130</td>
+            <td class="num">29</td>
+            <td class="num">0.93%</td>
+            <td class="num">2</td>
+            <td class="num cpl-low">$7.658</td>
+            <td class="num">14</td>
+            <td class="num">702</td>
+        </tr>
+<tr style="opacity:0.45">
             <td class="campaign-name">19/12/25_CP_VIDEOSNEWSDIC_FORM</td>
-            <td class="adset-name">REMARKETING</td>
+            <td class="adset-name">REMARKETING <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
             <td class="num">$7.266</td>
             <td class="num">627</td>
             <td class="num">40</td>
@@ -2194,9 +2248,9 @@ tbody tr:hover {
             <td class="num">31</td>
             <td class="num">255</td>
         </tr>
-<tr>
+<tr style="opacity:0.45">
             <td class="campaign-name">19/12/25_CP_VIDEOSNEWSDIC_FORM</td>
-            <td class="adset-name">SEGMENTADO</td>
+            <td class="adset-name">SEGMENTADO <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
             <td class="num">$6.419</td>
             <td class="num">980</td>
             <td class="num">43</td>
@@ -2206,9 +2260,9 @@ tbody tr:hover {
             <td class="num">29</td>
             <td class="num">357</td>
         </tr>
-<tr>
+<tr style="opacity:0.45">
             <td class="campaign-name">19/12/25_CP_VIDEOSNEWSDIC_FORM</td>
-            <td class="adset-name">ABIERTO</td>
+            <td class="adset-name">ABIERTO <span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span></td>
             <td class="num">$6.030</td>
             <td class="num">851</td>
             <td class="num">48</td>
@@ -2227,7 +2281,7 @@ tbody tr:hover {
 
 <!-- FOOTER -->
 <div class="footer">
-    Los Lagos Condominio &mdash; Dashboard Meta Ads + Ventas Reales &mdash; Generado automaticamente el 27/02/2026 12:21<br>
+    Los Lagos Condominio &mdash; Dashboard Meta Ads + Ventas Reales &mdash; Generado automaticamente el 27/02/2026 13:02<br>
     Datos de Meta Ads API &bull; Ventas: Google Sheet (Cierre Campanas) &bull; Cuenta: act_1089998585939349 &bull; COP
 </div>
 
@@ -2728,9 +2782,6 @@ function filterByDateRange() {
 
     // Update date range display
     document.getElementById('dateRangeDisplay').textContent = fmtDateES(fromDate) + ' — ' + fmtDateES(toDate);
-
-    // Regenerate AI analysis with new range
-    if (typeof generateAnalysis === 'function') generateAnalysis();
 }
 
 // Attach date picker events
@@ -2833,247 +2884,122 @@ function filterVentas(mes) {
     }
 }
 
-// ══════════════════════════════════════════════════════════
-// AI ANALYSIS — Dynamic generation on each load / filter
-// ══════════════════════════════════════════════════════════
-const ANALYSIS_DATA = {"activeCampaigns": 14, "activeCampsData": [{"name": "18/11/25_CP_PRUEBACA_FORM", "spend": 2650900, "leads": 323, "cpl": 8207, "ctr": 4.42, "frequency": 2.34}, {"name": "07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM", "spend": 1705214, "leads": 345, "cpl": 4943, "ctr": 5.03, "frequency": 1.72}, {"name": "20/10/25_CP_EVENTO26OCT_FORM", "spend": 1548236, "leads": 401, "cpl": 3861, "ctr": 1.6, "frequency": 1.94}, {"name": "26/03/25 FORM META PRUEBAS", "spend": 691053, "leads": 144, "cpl": 4799, "ctr": 2.98, "frequency": 1.52}, {"name": "04/02/26_CP_VIDEOSESTRATEGY_FORM", "spend": 441074, "leads": 120, "cpl": 3676, "ctr": 2.65, "frequency": 1.7}, {"name": "29/10/25_GENERALOCT_FORM", "spend": 395241, "leads": 80, "cpl": 4941, "ctr": 2.19, "frequency": 1.45}, {"name": "31/10/25_RECON_MENSAJESIG", "spend": 298914, "leads": 1, "cpl": 298914, "ctr": 0.9, "frequency": 1.97}, {"name": "31/10/25_TRAF_IG", "spend": 297922, "leads": 0, "cpl": 0, "ctr": 7.02, "frequency": 1.21}, {"name": "22/11/25_TRAFGRAL_WEB", "spend": 293801, "leads": 0, "cpl": 0, "ctr": 17.82, "frequency": 1.82}, {"name": "14/01/26_CP_VIDEOSENE_FORM", "spend": 288372, "leads": 54, "cpl": 5340, "ctr": 3.44, "frequency": 1.69}, {"name": "08/02/26_CP_VIDEOS_FORM PREG", "spend": 181215, "leads": 52, "cpl": 3485, "ctr": 2.34, "frequency": 1.36}, {"name": "13/02/26_CP_2PREGU_FORM", "spend": 136260, "leads": 28, "cpl": 4866, "ctr": 2.09, "frequency": 1.63}, {"name": "24/02/26_CP_1CA1A_FORM", "spend": 74358, "leads": 17, "cpl": 4374, "ctr": 2.02, "frequency": 1.51}, {"name": "24/02/26_CP_BESTSELLER_FORMVERIF", "spend": 19012, "leads": 2, "cpl": 9506, "ctr": 2.71, "frequency": 1.06}], "topPerformers": [{"name": "08/02/26_CP_VIDEOS_FORM PREG", "cpl": 3485, "leads": 52}, {"name": "04/02/26_CP_VIDEOSESTRATEGY_FORM", "cpl": 3676, "leads": 120}, {"name": "20/10/25_CP_EVENTO26OCT_FORM", "cpl": 3861, "leads": 401}], "bottomPerformers": [{"name": "31/10/25_RECON_MENSAJESIG", "cpl": 298914, "leads": 1}, {"name": "24/02/26_CP_BESTSELLER_FORMVERIF", "cpl": 9506, "leads": 2}, {"name": "18/11/25_CP_PRUEBACA_FORM", "cpl": 8207, "leads": 323}], "campaignRoas": [{"name": "18/11/25_CP_PRUEBACA_FORM", "spend": 2650900, "ventas": 11, "revenue": 510951600, "roas": 192.7}, {"name": "07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM", "spend": 1705214, "ventas": 4, "revenue": 203846000, "roas": 119.5}, {"name": "20/10/25_CP_EVENTO26OCT_FORM", "spend": 1548236, "ventas": 4, "revenue": 200850400, "roas": 129.7}, {"name": "26/03/25 FORM META PRUEBAS", "spend": 691053, "ventas": 3, "revenue": 47700000, "roas": 69.0}, {"name": "04/02/26_CP_VIDEOSESTRATEGY_FORM", "spend": 441074, "ventas": 1, "revenue": 0, "roas": 0.0}, {"name": "29/10/25_GENERALOCT_FORM", "spend": 395241, "ventas": 4, "revenue": 0, "roas": 0.0}, {"name": "31/10/25_RECON_MENSAJESIG", "spend": 298914, "ventas": 0, "revenue": 0, "roas": 0.0}, {"name": "31/10/25_TRAF_IG", "spend": 297922, "ventas": 0, "revenue": 0, "roas": 0.0}, {"name": "22/11/25_TRAFGRAL_WEB", "spend": 293801, "ventas": 0, "revenue": 0, "roas": 0.0}, {"name": "14/01/26_CP_VIDEOSENE_FORM", "spend": 288372, "ventas": 0, "revenue": 0, "roas": 0.0}, {"name": "08/02/26_CP_VIDEOS_FORM PREG", "spend": 181215, "ventas": 0, "revenue": 0, "roas": 0.0}, {"name": "13/02/26_CP_2PREGU_FORM", "spend": 136260, "ventas": 0, "revenue": 0, "roas": 0.0}, {"name": "24/02/26_CP_1CA1A_FORM", "spend": 74358, "ventas": 0, "revenue": 0, "roas": 0.0}, {"name": "24/02/26_CP_BESTSELLER_FORMVERIF", "spend": 19012, "ventas": 0, "revenue": 0, "roas": 0.0}], "metaVentasCount": 34, "metaVentasRevenue": 1311468800, "ventasSinPrecio": 9, "eneMeta": 23, "febMeta": 11, "fastClosers": 22, "slowClosers": 1, "totalDiasCount": 30, "topAsesor": {"name": "DANIELA PERALTA", "count": 8}, "topCreative": {"name": "750000", "count": 7}, "totalEngagement": 380674, "totalVideoViews": 344710, "totalMessaging": 902};
+// AI Analysis generated server-side by OpenAI at build time.
+// Client-side refresh available via button.
 
-function hl(text) { return '<span class="analysis-highlight">' + text + '</span>'; }
-function analysisItem(text) {
-    return '<div class="analysis-item"><span class="analysis-bullet"></span><span>' + text + '</span></div>';
+// ── Encrypted key + prompts for client-side refresh ──
+const _ENC_KEY = "R2qCYpxKxiPyG3WXg1H6sLxcYfG87qf0R6+fA8DbUYF/Q+ghpWP6b4kiIqCoFu6vq35jhMniz9pEq7dmye9hlA1Ux1O4cfZpnHEZnetW1K+GSVL207r33TKAwBHw72zle17wfKBH52GeLi2Oh0LaloRodKHk4vj3WY+7FtrCQbZ8Z+1Dq3/ufaF5OKCHVsjMu1p2oNy+4vckrIc/1flr4gRj/lM=";
+const _ENC_SALT = "meta-ads-los-lagos-2026";
+const _SYS_PROMPT = "Eres un analista senior de performance marketing especializado en Meta Ads (Facebook e Instagram) para el sector inmobiliario en Colombia. Tu cliente es 'Los Lagos Condominio', un proyecto de vivienda nueva. Genera insights accionables, especificos y basados en datos numericos. Cada insight debe ser 1-2 oraciones concisas con cifras concretas. NO uses emojis. NO uses markdown. Usa texto plano con numeros. NO menciones Google Sheets, ni datos de ventas, ni ROAS de ventas. 100% enfocado en metricas de Meta Ads: CPL, CTR, CPM, frecuencia, reach, impresiones, engagement, overlap, learning phase, fatiga de creativos, segmentacion, bid strategies, pacing.";
+const _USR_PROMPT = "Analiza estos datos de Meta Ads para Los Lagos Condominio y genera recomendaciones:\n\nRESUMEN GENERAL (periodo: 2026-01-28 a 2026-02-26, 30 dias):\n- Inversion total: $9,579,674 COP\n- Leads totales: 1,672\n- CPL promedio: $5,729 COP (~$1.30 USD)\n- CTR: 3.30%\n- CPM: $6,257 COP\n- CPC: $190 COP\n- Impresiones: 1,531,067\n- Alcance: 854,584\n- Video Views: 344,710\n- Engagement: 380,674\n- Mensajeria: 902\n\nESTADO DE CUENTA:\n- Campanas activas (ON): 14 de 20\n- Conjuntos activos: 19 de 31\n- Campanas pausadas: 6\n\nCAMPANAS ACTIVAS (ordenadas por inversion):\n  - 18/11/25_CP_PRUEBACA_FORM | Spend: $2,650,900 | Leads: 323 | CPL: $8,207 | CTR: 4.42% | Freq: 2.34 | Reach: 68,865 | Impr: 161,073\n  - 07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM | Spend: $1,705,214 | Leads: 345 | CPL: $4,943 | CTR: 5.03% | Freq: 1.72 | Reach: 90,720 | Impr: 155,931\n  - 20/10/25_CP_EVENTO26OCT_FORM | Spend: $1,548,236 | Leads: 401 | CPL: $3,861 | CTR: 1.60% | Freq: 1.94 | Reach: 160,624 | Impr: 311,312\n  - 26/03/25 FORM META PRUEBAS | Spend: $691,053 | Leads: 144 | CPL: $4,799 | CTR: 2.98% | Freq: 1.52 | Reach: 59,296 | Impr: 89,941\n  - 04/02/26_CP_VIDEOSESTRATEGY_FORM | Spend: $441,074 | Leads: 120 | CPL: $3,676 | CTR: 2.65% | Freq: 1.70 | Reach: 38,165 | Impr: 64,880\n  - 29/10/25_GENERALOCT_FORM | Spend: $395,241 | Leads: 80 | CPL: $4,941 | CTR: 2.19% | Freq: 1.45 | Reach: 32,231 | Impr: 46,877\n  - 31/10/25_RECON_MENSAJESIG | Spend: $298,914 | Leads: 1 | CPL: $298,914 | CTR: 0.90% | Freq: 1.97 | Reach: 221,012 | Impr: 435,150\n  - 31/10/25_TRAF_IG | Spend: $297,922 | Leads: 0 | CPL: $0 | CTR: 7.02% | Freq: 1.21 | Reach: 56,142 | Impr: 68,077\n  - 22/11/25_TRAFGRAL_WEB | Spend: $293,801 | Leads: 0 | CPL: $0 | CTR: 17.82% | Freq: 1.82 | Reach: 40,757 | Impr: 74,191\n  - 14/01/26_CP_VIDEOSENE_FORM | Spend: $288,372 | Leads: 54 | CPL: $5,340 | CTR: 3.44% | Freq: 1.69 | Reach: 12,923 | Impr: 21,829\n  - 08/02/26_CP_VIDEOS_FORM PREG | Spend: $181,215 | Leads: 52 | CPL: $3,485 | CTR: 2.34% | Freq: 1.36 | Reach: 14,759 | Impr: 20,143\n  - 13/02/26_CP_2PREGU_FORM | Spend: $136,260 | Leads: 28 | CPL: $4,866 | CTR: 2.09% | Freq: 1.63 | Reach: 11,312 | Impr: 18,438\n  - 24/02/26_CP_1CA1A_FORM | Spend: $74,358 | Leads: 17 | CPL: $4,374 | CTR: 2.02% | Freq: 1.51 | Reach: 6,340 | Impr: 9,590\n  - 24/02/26_CP_BESTSELLER_FORMVERIF | Spend: $19,012 | Leads: 2 | CPL: $9,506 | CTR: 2.71% | Freq: 1.06 | Reach: 1,360 | Impr: 1,441\n\nCAMPANAS PAUSADAS:\n  - 05/02/26_CP_VIDEOSREMAKENEWSDIC_FORM | Spend: $260,195 | Leads: 33 | CPL: $7,885\n  - 28/11/25_CP_GENERALNOV_FORM | Spend: $104,179 | Leads: 27 | CPL: $3,858\n  - 24/09/2025_CP_VIDEOSSEPT_FORM | Spend: $103,311 | Leads: 26 | CPL: $3,974\n  - CP_24/07/2025_VIDEOSCOOL_FORM | Spend: $35,478 | Leads: 8 | CPL: $4,435\n  - 28/08/2025_CP_VIDEOHAMBURGUES2_FORM#1 | Spend: $35,224 | Leads: 4 | CPL: $8,806\n  - 19/12/25_CP_VIDEOSNEWSDIC_FORM | Spend: $19,715 | Leads: 7 | CPL: $2,816\n\nCONJUNTOS DE ANUNCIOS ACTIVOS (ordenados por inversion):\n  - 18/11/25_CP_PRUEBACA_FORM → ABIERTO V1 | Spend: $2,650,900 | Leads: 323 | CPL: $8,207 | CTR: 4.42% | Freq: 2.34 | Reach: 68,865\n  - 07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM → ABIERTO | Spend: $1,705,214 | Leads: 345 | CPL: $4,943 | CTR: 5.03% | Freq: 1.72 | Reach: 90,720\n  - 20/10/25_CP_EVENTO26OCT_FORM → ABIERTO | Spend: $1,548,236 | Leads: 401 | CPL: $3,861 | CTR: 1.60% | Freq: 1.94 | Reach: 160,624\n  - 26/03/25 FORM META PRUEBAS → ABIERTO CTG FORM SIMPLE | Spend: $691,053 | Leads: 144 | CPL: $4,799 | CTR: 2.98% | Freq: 1.52 | Reach: 59,296\n  - 29/10/25_GENERALOCT_FORM → ABIERTO | Spend: $395,241 | Leads: 80 | CPL: $4,941 | CTR: 2.19% | Freq: 1.45 | Reach: 32,231\n  - 31/10/25_RECON_MENSAJESIG → ABIERTO | Spend: $298,914 | Leads: 1 | CPL: $298,914 | CTR: 0.90% | Freq: 1.97 | Reach: 221,012\n  - 31/10/25_TRAF_IG → ABIERTO | Spend: $297,922 | Leads: 0 | CPL: $0 | CTR: 7.02% | Freq: 1.21 | Reach: 56,142\n  - 22/11/25_TRAFGRAL_WEB → SEMI ABIERTO | Spend: $293,801 | Leads: 0 | CPL: $0 | CTR: 17.82% | Freq: 1.82 | Reach: 40,757\n  - 14/01/26_CP_VIDEOSENE_FORM → SEGMENTADO | Spend: $288,372 | Leads: 54 | CPL: $5,340 | CTR: 3.44% | Freq: 1.69 | Reach: 12,923\n  - 04/02/26_CP_VIDEOSESTRATEGY_FORM → SEGMENTADO | Spend: $230,912 | Leads: 65 | CPL: $3,552 | CTR: 2.75% | Freq: 1.39 | Reach: 24,465\n  - 04/02/26_CP_VIDEOSESTRATEGY_FORM → ABIERTO | Spend: $210,162 | Leads: 55 | CPL: $3,821 | CTR: 2.54% | Freq: 1.42 | Reach: 21,828\n  - 08/02/26_CP_VIDEOS_FORM PREG → SEGMENTADO | Spend: $181,215 | Leads: 52 | CPL: $3,485 | CTR: 2.34% | Freq: 1.36 | Reach: 14,759\n  - 13/02/26_CP_2PREGU_FORM → SEGMENTADO | Spend: $136,260 | Leads: 28 | CPL: $4,866 | CTR: 2.09% | Freq: 1.63 | Reach: 11,312\n  - 24/02/26_CP_BESTSELLER_FORMVERIF → SEGMENTADO | Spend: $19,012 | Leads: 2 | CPL: $9,506 | CTR: 2.71% | Freq: 1.06 | Reach: 1,360\n  - 24/02/26_CP_1CA1A_FORM → ABIERTO | Spend: $16,515 | Leads: 10 | CPL: $1,652 | CTR: 2.24% | Freq: 1.14 | Reach: 2,781\n  - 24/02/26_CP_1CA1A_FORM → ABIERTO | Spend: $14,688 | Leads: 1 | CPL: $14,688 | CTR: 1.70% | Freq: 1.11 | Reach: 1,267\n  - 24/02/26_CP_1CA1A_FORM → ABIERTO | Spend: $14,558 | Leads: 3 | CPL: $4,853 | CTR: 2.60% | Freq: 1.19 | Reach: 1,684\n  - 24/02/26_CP_1CA1A_FORM → ABIERTO | Spend: $14,339 | Leads: 1 | CPL: $14,339 | CTR: 1.55% | Freq: 1.11 | Reach: 1,280\n  - 24/02/26_CP_1CA1A_FORM → ABIERTO | Spend: $14,258 | Leads: 2 | CPL: $7,129 | CTR: 1.57% | Freq: 1.23 | Reach: 1,301\n\nTENDENCIA DIARIA (ultimos 7 dias):\n  - 2026-02-26 | Spend: $8,468 | Leads: 1 | CPM: $12,677 | CTR: 1.65%\n  - 2026-02-26 | Spend: $19,550 | Leads: 11 | CPM: $7,025 | CTR: 3.52%\n  - 2026-02-26 | Spend: $0 | Leads: 0 | CPM: $0 | CTR: 0.00%\n  - 2026-02-26 | Spend: $10,721 | Leads: 4 | CPM: $8,781 | CTR: 3.11%\n  - 2026-02-26 | Spend: $10,035 | Leads: 2 | CPM: $7,528 | CTR: 2.10%\n  - 2026-02-26 | Spend: $36,261 | Leads: 10 | CPM: $7,226 | CTR: 1.85%\n  - 2026-02-26 | Spend: $8,668 | Leads: 1 | CPM: $14,767 | CTR: 2.73%\n\nTENDENCIA SEMANAL:\n- Semana anterior: Spend $238,697 | Leads: 26 | CPL: $9,181\n- Ultima semana: Spend $93,703 | Leads: 29 | CPL: $3,231\n\nBENCHMARKS SECTOR INMOBILIARIO COLOMBIA:\n- CTR promedio: 0.9% - 1.5%\n- CPM promedio: $5,000 - $12,000 COP\n- Frecuencia ideal: < 2.5\n- CPL competitivo real estate: $8,000 - $25,000 COP\n\nResponde ESTRICTAMENTE en JSON valido con esta estructura (sin markdown, sin ```json, solo el JSON puro):\n{\n  \"positivo\": [\"item1\", \"item2\", ...maximo 6 items],\n  \"vigilar\": [\"item1\", \"item2\", ...maximo 6 items],\n  \"recomendaciones\": [\"item1\", \"item2\", ...maximo 6 items]\n}\n\nREGLAS:\n1. Cada item: 1-2 oraciones con datos numericos especificos\n2. \"positivo\": Metricas que funcionan bien vs benchmarks inmobiliarios\n3. \"vigilar\": Senales de alerta, tendencias negativas, riesgos de Auction Overlap, fatiga, learning phase\n4. \"recomendaciones\": Acciones concretas y especificas para optimizar Meta Ads\n5. Mencionar nombres de campanas y conjuntos especificos cuando sea relevante\n6. NO mencionar Google Sheets, ventas reales, ROAS de ventas ni datos externos\n7. Solo metricas de Meta Ads API";
+
+// Populate prompt viewer
+document.getElementById('systemPromptText').textContent = _SYS_PROMPT;
+document.getElementById('userPromptText').textContent = _USR_PROMPT;
+
+function togglePrompt() {
+    const el = document.getElementById('promptViewer');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
-function generateAnalysis() {
-    // Get current filtered date range
-    const fromDate = document.getElementById('dateFrom').value;
-    const toDate = document.getElementById('dateTo').value;
-    const indices = [];
-    ALL_DATES.forEach((d, i) => { if (d >= fromDate && d <= toDate) indices.push(i); });
-    if (indices.length === 0) return;
-
-    const spend = indices.map(i => ALL_SPEND[i]);
-    const leads = indices.map(i => ALL_LEADS[i]);
-    const cpl = indices.map(i => ALL_CPL[i]);
-    const ctr = indices.map(i => ALL_CTR[i]);
-    const cpm = indices.map(i => ALL_CPM[i]);
-    const impressions = indices.map(i => ALL_IMPRESSIONS[i]);
-    const clicks = indices.map(i => ALL_CLICKS[i]);
-    const numDays = indices.length;
-
-    const totalSpend = spend.reduce((a,b) => a+b, 0);
-    const totalLeads = leads.reduce((a,b) => a+b, 0);
-    const totalImpressions = impressions.reduce((a,b) => a+b, 0);
-    const totalClicks = clicks.reduce((a,b) => a+b, 0);
-    const avgCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
-    const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
-    const cplUSD = avgCPL / 4400;
-
-    // Week-over-week
-    const last7 = spend.slice(-7);
-    const prev7 = spend.slice(-14, -7);
-    const last7leads = leads.slice(-7);
-    const last7cpl = cpl.slice(-7).filter(v => v > 0);
-    const prev7cpl = cpl.slice(-14, -7).filter(v => v > 0);
-    const avgWeek2CPL = last7cpl.length > 0 ? last7cpl.reduce((a,b)=>a+b,0)/last7cpl.length : 0;
-    const avgWeek1CPL = prev7cpl.length > 0 ? prev7cpl.reduce((a,b)=>a+b,0)/prev7cpl.length : 0;
-
-    // CPM trend
-    const first7cpm = cpm.slice(0, 7);
-    const last7cpm = cpm.slice(-7);
-    const avgFirst7CPM = first7cpm.length > 0 ? first7cpm.reduce((a,b)=>a+b,0)/first7cpm.length : 0;
-    const avgLast7CPM = last7cpm.length > 0 ? last7cpm.reduce((a,b)=>a+b,0)/last7cpm.length : 0;
-    const cpmChangePct = avgFirst7CPM > 0 ? ((avgLast7CPM - avgFirst7CPM) / avgFirst7CPM * 100) : 0;
-
-    // Static data from Python
-    const D = ANALYSIS_DATA;
-    const activeCamps = D.activeCampaigns;
-    const metaVentasCount = D.metaVentasCount;
-    const metaVentasRevenue = D.metaVentasRevenue;
-    const roas = totalSpend > 0 ? metaVentasRevenue / totalSpend : 0;
-    const convRate = totalLeads > 0 ? (metaVentasCount / totalLeads * 100) : 0;
-
-    // Frequency from campaign data
-    const freqs = D.activeCampsData.map(c => c.frequency).filter(f => f > 0);
-    const avgFreq = freqs.length > 0 ? freqs.reduce((a,b)=>a+b,0)/freqs.length : 0;
-
-    // Best ROAS campaigns
-    const bestRoas = D.campaignRoas.filter(c => c.roas > 0).sort((a,b) => b.roas - a.roas);
-    const zeroVentasHighSpend = D.campaignRoas.filter(c => c.ventas === 0 && c.spend > totalSpend * 0.05)
-        .sort((a,b) => b.spend - a.spend);
-
-    // ─── BUILD ITEMS ─────────────────────────────
-    const pos = [], warn = [], rec = [];
-
-    // === LO POSITIVO ===
-    pos.push(hl(totalLeads.toLocaleString('es-CO') + ' leads') + ' en ' + numDays + ' dias con CPL de ' +
-        hl(fmtCOPFull(avgCPL) + ' COP') + ' (~$' + cplUSD.toFixed(2) + ' USD) &mdash; altamente eficiente para real estate');
-
-    if (avgCTR > 2.0) {
-        pos.push(hl('CTR del ' + avgCTR.toFixed(2) + '%') + ' &mdash; excelente, ' +
-            (avgCTR/1.2).toFixed(1) + 'x el promedio del sector inmobiliario (0.9%-1.5%)');
-    } else if (avgCTR > 1.0) {
-        pos.push(hl('CTR del ' + avgCTR.toFixed(2) + '%') + ' &mdash; por encima del promedio del sector real estate (0.9%-1.5%)');
-    }
-
-    if (roas > 1) {
-        pos.push('ROAS de ' + hl(roas.toFixed(1) + 'x') + ' &mdash; por cada $1 invertido se recuperan $' +
-            roas.toFixed(1) + ' en ventas reales. Revenue META: ' + hl(fmtCOPFull(metaVentasRevenue)));
-    }
-
-    if (D.topPerformers.length > 0) {
-        const best = D.topPerformers[0];
-        pos.push('Campana mas eficiente: ' + hl(best.name) + ' con CPL de ' + hl(fmtCOPFull(best.cpl)) + ' y ' + best.leads + ' leads');
-    }
-
-    if (D.totalEngagement > 50000) {
-        pos.push(hl(D.totalEngagement.toLocaleString('es-CO') + ' interacciones') + ', ' +
-            hl(D.totalVideoViews.toLocaleString('es-CO') + ' reproducciones') + ' y ' +
-            D.totalMessaging.toLocaleString('es-CO') + ' conexiones de mensajeria &mdash; fuerte presencia de marca');
-    }
-
-    if (avgWeek1CPL > 0 && avgWeek2CPL > 0 && avgWeek2CPL < avgWeek1CPL) {
-        const cplImprove = (1 - avgWeek2CPL / avgWeek1CPL) * 100;
-        pos.push('CPL mejorando: ' + hl('-' + cplImprove.toFixed(0) + '%') + ' ultima semana (' +
-            fmtCOPFull(avgWeek2CPL) + ') vs anterior (' + fmtCOPFull(avgWeek1CPL) + ')');
-    }
-
-    if (D.fastClosers > 0 && D.totalDiasCount > 0) {
-        const pctFast = D.fastClosers / D.totalDiasCount * 100;
-        if (pctFast > 20) {
-            pos.push(hl(pctFast.toFixed(0) + '% de ventas META') + ' cierran en 7 dias o menos &mdash; el equipo comercial actua rapido');
-        }
-    }
-
-    if (convRate > 1) {
-        pos.push('Tasa lead&rarr;venta: ' + hl(convRate.toFixed(1) + '%') + ' (' + metaVentasCount + ' ventas de ' + totalLeads.toLocaleString('es-CO') + ' leads)');
-    }
-
-    // === A VIGILAR ===
-    if (activeCamps > 10) {
-        warn.push(hl(activeCamps + ' campanas activas') + ' &mdash; alto riesgo de ' + hl('Auction Overlap') +
-            ': tus propios anuncios compiten entre si encareciendo la subasta');
-    } else if (activeCamps > 6) {
-        warn.push(hl(activeCamps + ' campanas activas') + ' &mdash; monitorear posible Auction Overlap entre campanas similares');
-    }
-
-    if (avgFreq > 2.5) {
-        const fatigueMsg = avgFreq > 3.0 ? 'EN ZONA DE FATIGA' : 'acercandose al limite';
-        warn.push('Frecuencia promedio de ' + hl(avgFreq.toFixed(2)) + ' &mdash; ' + fatigueMsg +
-            '. Los usuarios ven los anuncios demasiadas veces, el CPM sube y la conversion baja');
-    }
-
-    if (cpmChangePct > 20) {
-        warn.push('CPM subiendo: de ' + hl(fmtCOPFull(avgFirst7CPM)) + ' a ' + hl(fmtCOPFull(avgLast7CPM)) +
-            ' (+' + cpmChangePct.toFixed(0) + '%) &mdash; los leads se encarecen progresivamente');
-    }
-
-    if (avgWeek1CPL > 0 && avgWeek2CPL > avgWeek1CPL) {
-        const cplChange = (avgWeek2CPL - avgWeek1CPL) / avgWeek1CPL * 100;
-        if (cplChange > 15) {
-            warn.push('CPL subiendo semana a semana: ' + hl(fmtCOPFull(avgWeek1CPL)) + ' &rarr; ' +
-                hl(fmtCOPFull(avgWeek2CPL)) + ' (+' + cplChange.toFixed(0) + '%) &mdash; revisar creativos y segmentacion');
-        }
-    }
-
-    if (D.bottomPerformers.length > 0) {
-        const worst = D.bottomPerformers[0];
-        if (worst.cpl > avgCPL * 2) {
-            warn.push(hl(worst.name) + ' tiene CPL de ' + fmtCOPFull(worst.cpl) + ' (' + worst.leads + ' leads) &mdash; ' +
-                (worst.cpl/avgCPL).toFixed(1) + 'x el promedio. Considerar pausarla');
-        }
-    }
-
-    if (zeroVentasHighSpend.length > 0) {
-        const wasted = zeroVentasHighSpend.reduce((a,c) => a+c.spend, 0);
-        const names = zeroVentasHighSpend.slice(0,3).map(c => c.name.substring(0,20)).join(', ');
-        warn.push(hl(fmtCOPFull(wasted)) + ' invertidos en campanas sin ventas reales: ' + hl(names));
-    }
-
-    if (D.ventasSinPrecio > 0) {
-        warn.push(hl(D.ventasSinPrecio + ' ventas META') + ' sin precio en Google Sheet &mdash; el ROAS real podria ser mayor al reportado (' + roas.toFixed(1) + 'x)');
-    }
-
-    if (D.eneMeta > 0 && D.febMeta > 0) {
-        const metaChange = ((D.febMeta - D.eneMeta) / D.eneMeta) * 100;
-        if (metaChange < -20) {
-            warn.push('Ventas META cayeron ' + hl(Math.abs(metaChange).toFixed(0) + '%') +
-                ' de Enero (' + D.eneMeta + ') a Febrero (' + D.febMeta + ') &mdash; Febrero aun no cierra pero la tendencia es preocupante');
-        }
-    }
-
-    if (D.slowClosers > 0 && D.totalDiasCount > 0) {
-        const pctSlow = D.slowClosers / D.totalDiasCount * 100;
-        if (pctSlow > 15) {
-            warn.push(hl(pctSlow.toFixed(0) + '%') + ' de las ventas META tardan mas de 30 dias en cerrar &mdash; posible problema de seguimiento comercial');
-        }
-    }
-
-    // === RECOMENDACIONES ===
-    if (activeCamps > 8) {
-        rec.push(hl('Consolidar campanas:') + ' Reducir de ' + activeCamps + ' a 4-5 activas. Esto elimina Auction Overlap, concentra presupuesto y acelera la fase de aprendizaje del algoritmo');
-    }
-
-    if (bestRoas.length > 0) {
-        const br = bestRoas[0];
-        rec.push(hl('Escalar ' + br.name.substring(0,25) + ':') + ' ROAS de ' + br.roas.toFixed(1) + 'x con ' + br.ventas + ' ventas reales. Aumentar presupuesto 20-30% semanal sin salir de learning phase');
-    }
-
-    if (D.topPerformers.length > 0) {
-        rec.push(hl('Priorizar campanas eficientes:') + ' Las de CPL bajo (' + fmtCOPFull(D.topPerformers[0].cpl) + ') deben recibir mas presupuesto antes de lanzar nuevas pruebas');
-    }
-
-    if (cpmChangePct > 15 || avgFreq > 2.5) {
-        rec.push(hl('Rotar creativos cada 2-3 semanas:') + ' ' +
-            (cpmChangePct > 15 ? 'CPM +' + cpmChangePct.toFixed(0) + '% y ' : '') +
-            'frecuencia de ' + avgFreq.toFixed(1) + ' indican fatiga. Probar nuevos angulos: testimonios, recorridos, comparativos de precio');
-    }
-
-    if (avgCPL > 4000) {
-        rec.push(hl('Implementar bid cap:') + ' Con CPL promedio de ' + fmtCOPFull(avgCPL) + ', un bid cap de ' +
-            fmtCOPFull(avgCPL * 1.2) + ' controlaria el maximo sin perder volumen significativo');
-    }
-
-    if (zeroVentasHighSpend.length > 0) {
-        const names = zeroVentasHighSpend.slice(0,2).map(c => c.name.substring(0,20)).join(', ');
-        rec.push(hl('Pausar campanas sin conversion:') + ' ' + names + ' gastan sin generar ventas reales. Redirigir presupuesto a ganadoras');
-    }
-
-    if (D.ventasSinPrecio > 0) {
-        rec.push(hl('Completar precios en Sheet:') + ' ' + D.ventasSinPrecio + ' ventas META sin precio registrado. Esto subestima el ROAS real y dificulta decisiones de presupuesto');
-    }
-
-    if (D.topAsesor) {
-        rec.push(hl('Replicar proceso de ' + D.topAsesor.name + ':') + ' ' + D.topAsesor.count + ' ventas META cerradas &mdash; documentar su proceso de seguimiento y capacitar al resto del equipo comercial');
-    }
-
-    if (D.topCreative) {
-        rec.push(hl('Amplificar creativo "' + D.topCreative.name + '":') + ' ' + D.topCreative.count + ' ventas cerradas. Crear variaciones de este anuncio para escalar sin fatiga');
-    }
-
-    // ─── RENDER ──────────────────────────
-    const now = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    const timestamp = pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-
-    document.getElementById('analysisTimestamp').innerHTML =
-        'Generado automaticamente cruzando datos de Meta Ads + Google Sheet Ventas | Rango: ' +
-        fmtDateES(fromDate) + ' &mdash; ' + fmtDateES(toDate) + ' | ' + timestamp;
-
-    const buildCard = (cls, icon, title, items) => {
-        let html = '<div class="analysis-card ' + cls + '"><div class="analysis-card-header"><span class="analysis-icon">' + icon + '</span><h3>' + title + '</h3></div>';
-        items.slice(0,6).forEach(t => { html += analysisItem(t); });
-        html += '</div>';
-        return html;
-    };
-
-    document.getElementById('analysisGrid').innerHTML =
-        buildCard('positive', '&#9989;', 'Lo Positivo', pos) +
-        buildCard('warning', '&#9888;&#65039;', 'A Vigilar', warn) +
-        buildCard('recommend', '&#128161;', 'Recomendaciones', rec);
+async function _deriveKey(salt) {
+    const enc = new TextEncoder();
+    const keyData = await crypto.subtle.digest('SHA-256', enc.encode(salt));
+    return new Uint8Array(keyData);
 }
 
-// Generate on page load
-generateAnalysis();
+async function _decryptKey() {
+    const key = await _deriveKey(_ENC_SALT);
+    const encrypted = Uint8Array.from(atob(_ENC_KEY), c => c.charCodeAt(0));
+    const decrypted = new Uint8Array(encrypted.length);
+    for (let i = 0; i < encrypted.length; i++) {
+        decrypted[i] = encrypted[i] ^ key[i % key.length];
+    }
+    return new TextDecoder().decode(decrypted);
+}
+
+function _highlightText(text) {
+    return text.replace(/(\$[\d,.]+|\d+[.,]?\d*%|\d+[.,]\d+x)/g, '<span class="analysis-highlight">$1</span>');
+}
+
+function _buildCardHTML(cls, icon, title, items) {
+    let html = '<div class="analysis-card ' + cls + '"><div class="analysis-card-header"><span class="analysis-icon">' + icon + '</span><h3>' + title + '</h3></div>';
+    items.slice(0, 8).forEach(item => {
+        html += '<div class="analysis-item"><span class="analysis-bullet"></span><span>' + _highlightText(item) + '</span></div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+async function refreshAnalysis() {
+    const btn = document.getElementById('btnRefreshAI');
+    const grid = document.getElementById('analysisGrid');
+    const ts = document.getElementById('analysisTimestamp');
+
+    btn.disabled = true;
+    btn.innerHTML = '&#9203; Generando...';
+    btn.style.opacity = '0.6';
+    ts.textContent = 'Conectando con OpenAI...';
+
+    try {
+        const apiKey = await _decryptKey();
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + apiKey,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: _SYS_PROMPT },
+                    { role: 'user', content: _USR_PROMPT },
+                ],
+                temperature: 0.7,
+                max_tokens: 2500,
+            }),
+        });
+
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error('API ' + response.status + ': ' + err.substring(0, 200));
+        }
+
+        const data = await response.json();
+        let content = data.choices[0].message.content.trim();
+
+        // Strip markdown code fences if present
+        if (content.startsWith('```')) {
+            content = content.split('
+').slice(1).join('
+');
+        }
+        if (content.endsWith('```')) {
+            content = content.slice(0, -3);
+        }
+        content = content.trim();
+
+        const analysis = JSON.parse(content);
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const timestamp = pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+
+        grid.innerHTML =
+            _buildCardHTML('positive', '&#9989;', 'Lo Positivo', analysis.positivo || []) +
+            _buildCardHTML('warning', '&#9888;&#65039;', 'A Vigilar', analysis.vigilar || []) +
+            _buildCardHTML('recommend', '&#128161;', 'Recomendaciones', analysis.recomendaciones || []);
+
+        ts.innerHTML = 'Actualizado por OpenAI (gpt-4o-mini) | ' + timestamp + ' | <span style="color:var(--accent-cyan)">&#9889; Refresh exitoso</span>';
+
+    } catch (e) {
+        ts.innerHTML = '<span style="color:var(--accent-red)">&#9888; Error: ' + e.message.substring(0, 150) + '</span>';
+        console.error('OpenAI refresh error:', e);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '&#9889; Actualizar Analisis';
+        btn.style.opacity = '1';
+    }
+}
 
 </script>
 </body>

@@ -9,6 +9,10 @@ import os
 import csv
 import subprocess
 import sys
+import base64
+import hashlib
+import urllib.request
+import urllib.error
 from datetime import datetime
 from collections import defaultdict
 
@@ -23,6 +27,61 @@ ADSET_FILE = os.path.join(SCRIPT_DIR, "adset_insights.json")
 VENTAS_FILE = os.path.join(SCRIPT_DIR, "ventas_2026.csv")
 RESUMEN_FILE = os.path.join(SCRIPT_DIR, "resumen_gsheet.csv")
 OUTPUT_FILE = os.path.join(SCRIPT_DIR, "dashboard.html")
+ENC_KEY_FILE = os.path.join(SCRIPT_DIR, ".openai_key.enc")
+ENV_FILE = os.path.join(SCRIPT_DIR, ".env")
+_ENC_SALT = "meta-ads-los-lagos-2026"
+
+# ── OpenAI Integration ──────────────────────────────────────────────────────
+
+def _derive_key(salt):
+    return hashlib.sha256(salt.encode()).digest()
+
+def _decrypt_api_key(encrypted_b64):
+    key = _derive_key(_ENC_SALT)
+    encrypted = base64.b64decode(encrypted_b64)
+    decrypted = bytes(a ^ b for a, b in zip(encrypted, (key * ((len(encrypted) // len(key)) + 1))[:len(encrypted)]))
+    return decrypted.decode()
+
+def load_openai_key():
+    """Load OpenAI API key from env var, .env file, or encrypted file."""
+    # 1. Environment variable
+    k = os.environ.get("OPENAI_API_KEY")
+    if k:
+        return k
+    # 2. .env file
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("OPENAI_API_KEY="):
+                    return line.split("=", 1)[1].strip().strip('"').strip("'")
+    # 3. Encrypted file
+    if os.path.exists(ENC_KEY_FILE):
+        with open(ENC_KEY_FILE, "r") as f:
+            return _decrypt_api_key(f.read().strip())
+    return None
+
+def call_openai(api_key, system_prompt, user_prompt, model="gpt-4o-mini"):
+    """Call OpenAI Chat Completions API using stdlib only."""
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = json.dumps({
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.7,
+        "max_tokens": 2500,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+    with urllib.request.urlopen(req, timeout=45) as resp:
+        result = json.loads(resp.read().decode("utf-8"))
+        return result["choices"][0]["message"]["content"]
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -420,7 +479,17 @@ for a in adset_raw["data"]:
         "cpl": cpl,
     })
 
-adsets.sort(key=lambda x: x["spend"], reverse=True)
+# Detect ON/OFF for adsets based on their parent campaign status
+_active_camp_names = set(c['name'] for c in campaigns if c.get('is_active', False))
+for a in adsets:
+    a['is_active'] = a['campaign_name'] in _active_camp_names
+
+adset_active_count = sum(1 for a in adsets if a['is_active'])
+adset_paused_count = sum(1 for a in adsets if not a['is_active'])
+print(f"  Ad Sets: {len(adsets)} total ({adset_active_count} ON, {adset_paused_count} OFF)")
+
+# Sort: ON first, then by spend desc
+adsets.sort(key=lambda x: (0 if x['is_active'] else 1, -x['spend']))
 
 # ── Process Ventas Data ─────────────────────────────────────────────────────
 print("Processing ventas data...")
@@ -616,12 +685,16 @@ def build_adset_rows():
             else:
                 cpl_class = "cpl-high"
 
+        is_on = a.get('is_active', True)
+        status_badge = '<span class="badge badge-leads" style="margin-left:6px">ON</span>' if is_on else '<span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span>'
+        row_style = '' if is_on else ' style="opacity:0.45"'
+
         cpl_display = f'${a["cpl"]:,.0f}'.replace(",", ".") if a["cpl"] > 0 else "-"
         spend_display = f'${a["spend"]:,.0f}'.replace(",", ".")
 
-        rows.append(f"""<tr>
+        rows.append(f"""<tr{row_style}>
             <td class="campaign-name">{a['campaign_name']}</td>
-            <td class="adset-name">{a['name']}</td>
+            <td class="adset-name">{a['name']} {status_badge}</td>
             <td class="num">{spend_display}</td>
             <td class="num">{a['impressions']:,}</td>
             <td class="num">{a['clicks']:,}</td>
@@ -958,90 +1031,256 @@ for m in ventas_months_available:
 
 import json as _json
 
-def _safe_name(s):
-    """Escape a string for safe JS embedding."""
-    return s.replace("'", "\\'").replace('"', '\\"').replace('\n', ' ')
+# ── OpenAI-Powered Analysis ─────────────────────────────────────────────────
+print("Generating AI Analysis via OpenAI...")
 
-# Prepare analysis data for JS
-_active_camps_data = []
-for c in campaigns:
-    if c.get('is_active', False):
-        _active_camps_data.append({
-            'name': c['name'],
-            'spend': round(c['spend']),
-            'leads': c['leads'],
-            'cpl': round(c['cpl']),
-            'ctr': round(c['ctr'], 2),
-            'frequency': round(c.get('frequency', 0), 2),
-        })
+_openai_key = load_openai_key()
+_ai_analysis = None
 
-_top_perf_data = [{'name': c['name'], 'cpl': round(c['cpl']), 'leads': c['leads']} for c in top_performers]
-_bottom_perf_data = [{'name': c['name'], 'cpl': round(c['cpl']), 'leads': c['leads']} for c in bottom_performers]
+if _openai_key:
+    # Build comprehensive data summary for OpenAI
+    _active_camps = [c for c in campaigns if c.get('is_active', False)]
+    _paused_camps = [c for c in campaigns if not c.get('is_active', False)]
+    _active_adset_list = [a for a in adsets if a.get('is_active', False)]
+    _paused_adset_list = [a for a in adsets if not a.get('is_active', False)]
 
-# Only include active (ON) campaigns in analysis ROAS data
-_active_names = set(c['name'] for c in campaigns if c.get('is_active', False))
+    # Daily trends for last 7 days
+    _sorted_daily = sorted(daily_raw['data'], key=lambda d: d['date_start'])
+    _last7_daily = _sorted_daily[-7:] if len(_sorted_daily) >= 7 else _sorted_daily
+    _prev7_daily = _sorted_daily[-14:-7] if len(_sorted_daily) >= 14 else []
 
-_campaign_roas_data = []
-for cr in campaign_roas:
-    if cr['name'] in _active_names:
-        _campaign_roas_data.append({
-            'name': cr['name'],
-            'spend': round(cr['spend']),
-            'ventas': cr['ventas'],
-            'revenue': round(cr['revenue']),
-            'roas': round(cr['roas'], 1),
-        })
+    # Aggregate weekly data
+    def _week_agg(daily_list):
+        s = sum(float(d.get('spend', 0)) for d in daily_list)
+        l_vals = []
+        for d in daily_list:
+            for act in d.get('actions', []):
+                if act['action_type'] == 'lead':
+                    l_vals.append(int(act['value']))
+        leads = sum(l_vals)
+        return s, leads, (s / leads if leads > 0 else 0)
 
-_ventas_sin_precio_count = len([v for v in meta_ventas if v['precio'] == 0])
+    _w2_spend, _w2_leads, _w2_cpl = _week_agg(_last7_daily)
+    _w1_spend, _w1_leads, _w1_cpl = _week_agg(_prev7_daily) if _prev7_daily else (0, 0, 0)
 
-_ene_data = ventas_by_month.get('ENERO', {'total': 0, 'meta': 0, 'meta_revenue': 0})
-_feb_data = ventas_by_month.get('FEBRERO', {'total': 0, 'meta': 0, 'meta_revenue': 0})
+    _camp_lines = []
+    for c in sorted(_active_camps, key=lambda x: -x['spend']):
+        _camp_lines.append(
+            f"  - {c['name']} | Spend: ${c['spend']:,.0f} | Leads: {c['leads']} | "
+            f"CPL: ${c['cpl']:,.0f} | CTR: {c['ctr']:.2f}% | Freq: {c.get('frequency',0):.2f} | "
+            f"Reach: {c.get('reach',0):,} | Impr: {c.get('impressions',0):,}"
+        )
 
-_meta_dias_list = [v['dias_cierre'] for v in meta_ventas if v['dias_cierre'] is not None and v['dias_cierre'] > 0]
-_fast_closers_count = len([d for d in _meta_dias_list if d <= 7])
-_slow_closers_count = len([d for d in _meta_dias_list if d > 30])
-_total_dias_count = len(_meta_dias_list)
+    _adset_lines = []
+    for a in sorted(_active_adset_list, key=lambda x: -x['spend']):
+        _adset_lines.append(
+            f"  - {a['campaign_name']} → {a['name']} | Spend: ${a['spend']:,.0f} | "
+            f"Leads: {a['leads']} | CPL: ${a['cpl']:,.0f} | CTR: {a['ctr']:.2f}% | "
+            f"Freq: {a['frequency']:.2f} | Reach: {a['reach']:,}"
+        )
 
-_top_asesor = None
-if meta_ventas_by_asesor:
-    _top_a = max(meta_ventas_by_asesor.items(), key=lambda x: x[1]['count'])
-    _top_asesor = {'name': _top_a[0], 'count': _top_a[1]['count']}
+    _paused_lines = []
+    for c in sorted(_paused_camps, key=lambda x: -x['spend']):
+        _paused_lines.append(f"  - {c['name']} | Spend: ${c['spend']:,.0f} | Leads: {c['leads']} | CPL: ${c['cpl']:,.0f}")
 
-_top_creative = None
-_top_creatives_list = sorted(meta_ventas_by_creative.items(), key=lambda x: x[1]['count'], reverse=True)
-if _top_creatives_list:
-    _top_creative = {'name': _top_creatives_list[0][0], 'count': _top_creatives_list[0][1]['count']}
+    _daily_lines = []
+    for d in _last7_daily:
+        d_leads = sum(int(act['value']) for act in d.get('actions', []) if act['action_type'] == 'lead')
+        d_spend = float(d.get('spend', 0))
+        _daily_lines.append(
+            f"  - {d['date_start']} | Spend: ${d_spend:,.0f} | Leads: {d_leads} | "
+            f"CPM: ${float(d.get('cpm',0)):,.0f} | CTR: {float(d.get('ctr',0)):.2f}%"
+        )
 
-analysis_js_data = _json.dumps({
-    'activeCampaigns': len([c for c in campaigns if c.get('is_active', False)]),
-    'activeCampsData': _active_camps_data,
-    'topPerformers': _top_perf_data,
-    'bottomPerformers': _bottom_perf_data,
-    'campaignRoas': _campaign_roas_data,
-    'metaVentasCount': meta_ventas_count,
-    'metaVentasRevenue': round(meta_ventas_revenue),
-    'ventasSinPrecio': _ventas_sin_precio_count,
-    'eneMeta': _ene_data.get('meta', 0),
-    'febMeta': _feb_data.get('meta', 0),
-    'fastClosers': _fast_closers_count,
-    'slowClosers': _slow_closers_count,
-    'totalDiasCount': _total_dias_count,
-    'topAsesor': _top_asesor,
-    'topCreative': _top_creative,
-    'totalEngagement': total_engagement,
-    'totalVideoViews': total_video_views,
-    'totalMessaging': total_messaging,
-}, ensure_ascii=False)
+    _avg_cpm = total_impressions > 0 and (total_spend / total_impressions * 1000) or 0
+    _avg_cpc = total_clicks > 0 and (total_spend / total_clicks) or 0
+    _cpl_usd = avg_cpl / 4400 if avg_cpl > 0 else 0
+    _date_range = f"{daily_dates[0]} a {daily_dates[-1]}" if daily_dates else "N/A"
 
-# placeholder — the actual HTML is generated by JS
-analysis_section_html = '''<!-- AI-POWERED ANALYSIS (dynamic) -->
+    _system_prompt = (
+        "Eres un analista senior de performance marketing especializado en Meta Ads "
+        "(Facebook e Instagram) para el sector inmobiliario en Colombia. Tu cliente es "
+        "'Los Lagos Condominio', un proyecto de vivienda nueva. "
+        "Genera insights accionables, especificos y basados en datos numericos. "
+        "Cada insight debe ser 1-2 oraciones concisas con cifras concretas. "
+        "NO uses emojis. NO uses markdown. Usa texto plano con numeros. "
+        "NO menciones Google Sheets, ni datos de ventas, ni ROAS de ventas. "
+        "100% enfocado en metricas de Meta Ads: CPL, CTR, CPM, frecuencia, reach, "
+        "impresiones, engagement, overlap, learning phase, fatiga de creativos, "
+        "segmentacion, bid strategies, pacing."
+    )
+
+    _user_prompt = f"""Analiza estos datos de Meta Ads para Los Lagos Condominio y genera recomendaciones:
+
+RESUMEN GENERAL (periodo: {_date_range}, {len(daily_dates)} dias):
+- Inversion total: ${total_spend:,.0f} COP
+- Leads totales: {total_leads:,}
+- CPL promedio: ${avg_cpl:,.0f} COP (~${_cpl_usd:.2f} USD)
+- CTR: {avg_ctr:.2f}%
+- CPM: ${_avg_cpm:,.0f} COP
+- CPC: ${_avg_cpc:,.0f} COP
+- Impresiones: {total_impressions:,}
+- Alcance: {total_reach:,}
+- Video Views: {total_video_views:,}
+- Engagement: {total_engagement:,}
+- Mensajeria: {total_messaging:,}
+
+ESTADO DE CUENTA:
+- Campanas activas (ON): {active_count} de {len(campaigns)}
+- Conjuntos activos: {len(_active_adset_list)} de {len(adsets)}
+- Campanas pausadas: {paused_count}
+
+CAMPANAS ACTIVAS (ordenadas por inversion):
+{chr(10).join(_camp_lines)}
+
+CAMPANAS PAUSADAS:
+{chr(10).join(_paused_lines) if _paused_lines else '  Ninguna'}
+
+CONJUNTOS DE ANUNCIOS ACTIVOS (ordenados por inversion):
+{chr(10).join(_adset_lines)}
+
+TENDENCIA DIARIA (ultimos 7 dias):
+{chr(10).join(_daily_lines)}
+
+TENDENCIA SEMANAL:
+- Semana anterior: Spend ${_w1_spend:,.0f} | Leads: {_w1_leads} | CPL: ${_w1_cpl:,.0f}
+- Ultima semana: Spend ${_w2_spend:,.0f} | Leads: {_w2_leads} | CPL: ${_w2_cpl:,.0f}
+
+BENCHMARKS SECTOR INMOBILIARIO COLOMBIA:
+- CTR promedio: 0.9% - 1.5%
+- CPM promedio: $5,000 - $12,000 COP
+- Frecuencia ideal: < 2.5
+- CPL competitivo real estate: $8,000 - $25,000 COP
+
+Responde ESTRICTAMENTE en JSON valido con esta estructura (sin markdown, sin ```json, solo el JSON puro):
+{{
+  "positivo": ["item1", "item2", ...maximo 6 items],
+  "vigilar": ["item1", "item2", ...maximo 6 items],
+  "recomendaciones": ["item1", "item2", ...maximo 6 items]
+}}
+
+REGLAS:
+1. Cada item: 1-2 oraciones con datos numericos especificos
+2. "positivo": Metricas que funcionan bien vs benchmarks inmobiliarios
+3. "vigilar": Senales de alerta, tendencias negativas, riesgos de Auction Overlap, fatiga, learning phase
+4. "recomendaciones": Acciones concretas y especificas para optimizar Meta Ads
+5. Mencionar nombres de campanas y conjuntos especificos cuando sea relevante
+6. NO mencionar Google Sheets, ventas reales, ROAS de ventas ni datos externos
+7. Solo metricas de Meta Ads API"""
+
+    try:
+        print("  Calling OpenAI API (gpt-4o-mini)...")
+        _ai_response = call_openai(_openai_key, _system_prompt, _user_prompt)
+        # Clean response - strip markdown code blocks if present
+        _ai_clean = _ai_response.strip()
+        if _ai_clean.startswith("```"):
+            _ai_clean = _ai_clean.split("\n", 1)[1] if "\n" in _ai_clean else _ai_clean[3:]
+        if _ai_clean.endswith("```"):
+            _ai_clean = _ai_clean[:-3]
+        _ai_clean = _ai_clean.strip()
+        _ai_analysis = json.loads(_ai_clean)
+        print(f"  ✅ OpenAI analysis received: {len(_ai_analysis.get('positivo',[]))} positivo, "
+              f"{len(_ai_analysis.get('vigilar',[]))} vigilar, {len(_ai_analysis.get('recomendaciones',[]))} recomendaciones")
+    except urllib.error.HTTPError as e:
+        print(f"  ⚠️  OpenAI API error: {e.code} {e.reason}")
+        try:
+            err_body = e.read().decode()
+            print(f"     {err_body[:200]}")
+        except:
+            pass
+    except urllib.error.URLError as e:
+        print(f"  ⚠️  Network error: {e.reason}")
+    except json.JSONDecodeError as e:
+        print(f"  ⚠️  Failed to parse OpenAI response as JSON: {e}")
+        print(f"     Raw response: {_ai_response[:300] if '_ai_response' in dir() else 'N/A'}")
+    except Exception as e:
+        print(f"  ⚠️  Unexpected error: {e}")
+else:
+    print("  ⚠️  No OpenAI API key found. Set OPENAI_API_KEY env var or add .openai_key.enc")
+
+# Build analysis HTML
+_now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+def _build_analysis_items(items):
+    """Build HTML for analysis items list."""
+    html = ""
+    for item in items[:8]:
+        # Highlight numbers and key phrases
+        import re
+        highlighted = re.sub(
+            r'(\$[\d,.]+|\d+[.,]?\d*%|\d+[.,]\d+x|CPL de \$[\d,.]+|CTR del? [\d,.]+%)',
+            r'<span class="analysis-highlight">\1</span>',
+            item
+        )
+        html += f'<div class="analysis-item"><span class="analysis-bullet"></span><span>{highlighted}</span></div>\n'
+    return html
+
+if _ai_analysis:
+    _pos_html = _build_analysis_items(_ai_analysis.get('positivo', []))
+    _warn_html = _build_analysis_items(_ai_analysis.get('vigilar', []))
+    _rec_html = _build_analysis_items(_ai_analysis.get('recomendaciones', []))
+    _source_label = f"Generado por OpenAI (gpt-4o-mini) | Datos: Meta Ads API | {_now_str}"
+else:
+    _pos_html = '<div class="analysis-item"><span class="analysis-bullet"></span><span>No se pudo conectar con OpenAI. Ejecuta <b>python3 build_dashboard.py</b> para reintentar.</span></div>'
+    _warn_html = _pos_html
+    _rec_html = _pos_html
+    _source_label = f"Error al generar analisis | {_now_str}"
+
+# Serialize prompts for JS embedding
+import json as _json2
+_system_prompt_js = _json2.dumps(_system_prompt, ensure_ascii=False) if _openai_key else '""'
+_user_prompt_js = _json2.dumps(_user_prompt, ensure_ascii=False) if _openai_key else '""'
+
+# Read encrypted key for client-side refresh
+_enc_key_b64 = ""
+if os.path.exists(ENC_KEY_FILE):
+    with open(ENC_KEY_FILE, "r") as f:
+        _enc_key_b64 = f.read().strip()
+
+analysis_section_html = f'''<!-- AI-POWERED ANALYSIS (OpenAI) -->
 <div class="analysis-section" id="analysisSection">
-    <div class="section-title"><span class="icon">&#129504;</span> Analisis IA &mdash; Insights Automaticos</div>
-    <div style="font-size:11px;color:var(--text-muted);margin:-12px 0 16px 0;" id="analysisTimestamp">
-        Generando analisis...
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div class="section-title" style="margin-bottom:0"><span class="icon">&#129504;</span> Analisis IA &mdash; Insights Automaticos</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <button onclick="togglePrompt()" class="filter-btn" style="font-size:11px;padding:6px 14px;opacity:0.7;" title="Ver prompt enviado a OpenAI">
+                &#128065; Ver Prompt
+            </button>
+            <button onclick="refreshAnalysis()" id="btnRefreshAI" class="filter-btn source-btn" style="background:var(--gradient-1);color:#fff;border:none;font-size:12px;padding:8px 18px;cursor:pointer;" title="Regenerar analisis con OpenAI">
+                &#9889; Actualizar Analisis
+            </button>
+        </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin:4px 0 16px 0;" id="analysisTimestamp">
+        {_source_label}
+    </div>
+    <!-- Prompt viewer (hidden by default) -->
+    <div id="promptViewer" style="display:none;margin-bottom:20px;background:var(--bg-card-alt);border:1px solid var(--border-color);border-radius:12px;padding:16px;max-height:400px;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h4 style="color:var(--accent-cyan);margin:0;">&#128221; Prompt enviado a OpenAI</h4>
+            <button onclick="togglePrompt()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">&#10005;</button>
+        </div>
+        <div style="margin-bottom:12px;">
+            <div style="color:var(--accent-purple);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">System Prompt</div>
+            <pre id="systemPromptText" style="white-space:pre-wrap;font-size:11px;color:var(--text-secondary);line-height:1.5;margin:0;font-family:inherit;"></pre>
+        </div>
+        <div>
+            <div style="color:var(--accent-blue);font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;">User Prompt (datos enviados)</div>
+            <pre id="userPromptText" style="white-space:pre-wrap;font-size:11px;color:var(--text-secondary);line-height:1.5;margin:0;font-family:inherit;"></pre>
+        </div>
     </div>
     <div class="analysis-grid" id="analysisGrid">
-        <!-- populated by JS -->
+        <div class="analysis-card positive">
+            <div class="analysis-card-header"><span class="analysis-icon">&#9989;</span><h3>Lo Positivo</h3></div>
+            {_pos_html}
+        </div>
+        <div class="analysis-card warning">
+            <div class="analysis-card-header"><span class="analysis-icon">&#9888;&#65039;</span><h3>A Vigilar</h3></div>
+            {_warn_html}
+        </div>
+        <div class="analysis-card recommend">
+            <div class="analysis-card-header"><span class="analysis-icon">&#128161;</span><h3>Recomendaciones</h3></div>
+            {_rec_html}
+        </div>
     </div>
 </div>'''
 print("AI Analysis section generated.")
@@ -2615,9 +2854,6 @@ function filterByDateRange() {{
 
     // Update date range display
     document.getElementById('dateRangeDisplay').textContent = fmtDateES(fromDate) + ' \u2014 ' + fmtDateES(toDate);
-
-    // Regenerate AI analysis with new range
-    if (typeof generateAnalysis === 'function') generateAnalysis();
 }}
 
 // Attach date picker events
@@ -2720,247 +2956,120 @@ function filterVentas(mes) {{
     }}
 }}
 
-// ══════════════════════════════════════════════════════════
-// AI ANALYSIS — Dynamic generation on each load / filter
-// ══════════════════════════════════════════════════════════
-const ANALYSIS_DATA = {analysis_js_data};
+// AI Analysis generated server-side by OpenAI at build time.
+// Client-side refresh available via button.
 
-function hl(text) {{ return '<span class="analysis-highlight">' + text + '</span>'; }}
-function analysisItem(text) {{
-    return '<div class="analysis-item"><span class="analysis-bullet"></span><span>' + text + '</span></div>';
+// ── Encrypted key + prompts for client-side refresh ──
+const _ENC_KEY = "{_enc_key_b64}";
+const _ENC_SALT = "meta-ads-los-lagos-2026";
+const _SYS_PROMPT = {_system_prompt_js};
+const _USR_PROMPT = {_user_prompt_js};
+
+// Populate prompt viewer
+document.getElementById('systemPromptText').textContent = _SYS_PROMPT;
+document.getElementById('userPromptText').textContent = _USR_PROMPT;
+
+function togglePrompt() {{
+    const el = document.getElementById('promptViewer');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }}
 
-function generateAnalysis() {{
-    // Get current filtered date range
-    const fromDate = document.getElementById('dateFrom').value;
-    const toDate = document.getElementById('dateTo').value;
-    const indices = [];
-    ALL_DATES.forEach((d, i) => {{ if (d >= fromDate && d <= toDate) indices.push(i); }});
-    if (indices.length === 0) return;
-
-    const spend = indices.map(i => ALL_SPEND[i]);
-    const leads = indices.map(i => ALL_LEADS[i]);
-    const cpl = indices.map(i => ALL_CPL[i]);
-    const ctr = indices.map(i => ALL_CTR[i]);
-    const cpm = indices.map(i => ALL_CPM[i]);
-    const impressions = indices.map(i => ALL_IMPRESSIONS[i]);
-    const clicks = indices.map(i => ALL_CLICKS[i]);
-    const numDays = indices.length;
-
-    const totalSpend = spend.reduce((a,b) => a+b, 0);
-    const totalLeads = leads.reduce((a,b) => a+b, 0);
-    const totalImpressions = impressions.reduce((a,b) => a+b, 0);
-    const totalClicks = clicks.reduce((a,b) => a+b, 0);
-    const avgCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
-    const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
-    const cplUSD = avgCPL / 4400;
-
-    // Week-over-week
-    const last7 = spend.slice(-7);
-    const prev7 = spend.slice(-14, -7);
-    const last7leads = leads.slice(-7);
-    const last7cpl = cpl.slice(-7).filter(v => v > 0);
-    const prev7cpl = cpl.slice(-14, -7).filter(v => v > 0);
-    const avgWeek2CPL = last7cpl.length > 0 ? last7cpl.reduce((a,b)=>a+b,0)/last7cpl.length : 0;
-    const avgWeek1CPL = prev7cpl.length > 0 ? prev7cpl.reduce((a,b)=>a+b,0)/prev7cpl.length : 0;
-
-    // CPM trend
-    const first7cpm = cpm.slice(0, 7);
-    const last7cpm = cpm.slice(-7);
-    const avgFirst7CPM = first7cpm.length > 0 ? first7cpm.reduce((a,b)=>a+b,0)/first7cpm.length : 0;
-    const avgLast7CPM = last7cpm.length > 0 ? last7cpm.reduce((a,b)=>a+b,0)/last7cpm.length : 0;
-    const cpmChangePct = avgFirst7CPM > 0 ? ((avgLast7CPM - avgFirst7CPM) / avgFirst7CPM * 100) : 0;
-
-    // Static data from Python
-    const D = ANALYSIS_DATA;
-    const activeCamps = D.activeCampaigns;
-    const metaVentasCount = D.metaVentasCount;
-    const metaVentasRevenue = D.metaVentasRevenue;
-    const roas = totalSpend > 0 ? metaVentasRevenue / totalSpend : 0;
-    const convRate = totalLeads > 0 ? (metaVentasCount / totalLeads * 100) : 0;
-
-    // Frequency from campaign data
-    const freqs = D.activeCampsData.map(c => c.frequency).filter(f => f > 0);
-    const avgFreq = freqs.length > 0 ? freqs.reduce((a,b)=>a+b,0)/freqs.length : 0;
-
-    // Best ROAS campaigns
-    const bestRoas = D.campaignRoas.filter(c => c.roas > 0).sort((a,b) => b.roas - a.roas);
-    const zeroVentasHighSpend = D.campaignRoas.filter(c => c.ventas === 0 && c.spend > totalSpend * 0.05)
-        .sort((a,b) => b.spend - a.spend);
-
-    // ─── BUILD ITEMS ─────────────────────────────
-    const pos = [], warn = [], rec = [];
-
-    // === LO POSITIVO ===
-    pos.push(hl(totalLeads.toLocaleString('es-CO') + ' leads') + ' en ' + numDays + ' dias con CPL de ' +
-        hl(fmtCOPFull(avgCPL) + ' COP') + ' (~$' + cplUSD.toFixed(2) + ' USD) &mdash; altamente eficiente para real estate');
-
-    if (avgCTR > 2.0) {{
-        pos.push(hl('CTR del ' + avgCTR.toFixed(2) + '%') + ' &mdash; excelente, ' +
-            (avgCTR/1.2).toFixed(1) + 'x el promedio del sector inmobiliario (0.9%-1.5%)');
-    }} else if (avgCTR > 1.0) {{
-        pos.push(hl('CTR del ' + avgCTR.toFixed(2) + '%') + ' &mdash; por encima del promedio del sector real estate (0.9%-1.5%)');
-    }}
-
-    if (roas > 1) {{
-        pos.push('ROAS de ' + hl(roas.toFixed(1) + 'x') + ' &mdash; por cada $1 invertido se recuperan $' +
-            roas.toFixed(1) + ' en ventas reales. Revenue META: ' + hl(fmtCOPFull(metaVentasRevenue)));
-    }}
-
-    if (D.topPerformers.length > 0) {{
-        const best = D.topPerformers[0];
-        pos.push('Campana mas eficiente: ' + hl(best.name) + ' con CPL de ' + hl(fmtCOPFull(best.cpl)) + ' y ' + best.leads + ' leads');
-    }}
-
-    if (D.totalEngagement > 50000) {{
-        pos.push(hl(D.totalEngagement.toLocaleString('es-CO') + ' interacciones') + ', ' +
-            hl(D.totalVideoViews.toLocaleString('es-CO') + ' reproducciones') + ' y ' +
-            D.totalMessaging.toLocaleString('es-CO') + ' conexiones de mensajeria &mdash; fuerte presencia de marca');
-    }}
-
-    if (avgWeek1CPL > 0 && avgWeek2CPL > 0 && avgWeek2CPL < avgWeek1CPL) {{
-        const cplImprove = (1 - avgWeek2CPL / avgWeek1CPL) * 100;
-        pos.push('CPL mejorando: ' + hl('-' + cplImprove.toFixed(0) + '%') + ' ultima semana (' +
-            fmtCOPFull(avgWeek2CPL) + ') vs anterior (' + fmtCOPFull(avgWeek1CPL) + ')');
-    }}
-
-    if (D.fastClosers > 0 && D.totalDiasCount > 0) {{
-        const pctFast = D.fastClosers / D.totalDiasCount * 100;
-        if (pctFast > 20) {{
-            pos.push(hl(pctFast.toFixed(0) + '% de ventas META') + ' cierran en 7 dias o menos &mdash; el equipo comercial actua rapido');
-        }}
-    }}
-
-    if (convRate > 1) {{
-        pos.push('Tasa lead&rarr;venta: ' + hl(convRate.toFixed(1) + '%') + ' (' + metaVentasCount + ' ventas de ' + totalLeads.toLocaleString('es-CO') + ' leads)');
-    }}
-
-    // === A VIGILAR ===
-    if (activeCamps > 10) {{
-        warn.push(hl(activeCamps + ' campanas activas') + ' &mdash; alto riesgo de ' + hl('Auction Overlap') +
-            ': tus propios anuncios compiten entre si encareciendo la subasta');
-    }} else if (activeCamps > 6) {{
-        warn.push(hl(activeCamps + ' campanas activas') + ' &mdash; monitorear posible Auction Overlap entre campanas similares');
-    }}
-
-    if (avgFreq > 2.5) {{
-        const fatigueMsg = avgFreq > 3.0 ? 'EN ZONA DE FATIGA' : 'acercandose al limite';
-        warn.push('Frecuencia promedio de ' + hl(avgFreq.toFixed(2)) + ' &mdash; ' + fatigueMsg +
-            '. Los usuarios ven los anuncios demasiadas veces, el CPM sube y la conversion baja');
-    }}
-
-    if (cpmChangePct > 20) {{
-        warn.push('CPM subiendo: de ' + hl(fmtCOPFull(avgFirst7CPM)) + ' a ' + hl(fmtCOPFull(avgLast7CPM)) +
-            ' (+' + cpmChangePct.toFixed(0) + '%) &mdash; los leads se encarecen progresivamente');
-    }}
-
-    if (avgWeek1CPL > 0 && avgWeek2CPL > avgWeek1CPL) {{
-        const cplChange = (avgWeek2CPL - avgWeek1CPL) / avgWeek1CPL * 100;
-        if (cplChange > 15) {{
-            warn.push('CPL subiendo semana a semana: ' + hl(fmtCOPFull(avgWeek1CPL)) + ' &rarr; ' +
-                hl(fmtCOPFull(avgWeek2CPL)) + ' (+' + cplChange.toFixed(0) + '%) &mdash; revisar creativos y segmentacion');
-        }}
-    }}
-
-    if (D.bottomPerformers.length > 0) {{
-        const worst = D.bottomPerformers[0];
-        if (worst.cpl > avgCPL * 2) {{
-            warn.push(hl(worst.name) + ' tiene CPL de ' + fmtCOPFull(worst.cpl) + ' (' + worst.leads + ' leads) &mdash; ' +
-                (worst.cpl/avgCPL).toFixed(1) + 'x el promedio. Considerar pausarla');
-        }}
-    }}
-
-    if (zeroVentasHighSpend.length > 0) {{
-        const wasted = zeroVentasHighSpend.reduce((a,c) => a+c.spend, 0);
-        const names = zeroVentasHighSpend.slice(0,3).map(c => c.name.substring(0,20)).join(', ');
-        warn.push(hl(fmtCOPFull(wasted)) + ' invertidos en campanas sin ventas reales: ' + hl(names));
-    }}
-
-    if (D.ventasSinPrecio > 0) {{
-        warn.push(hl(D.ventasSinPrecio + ' ventas META') + ' sin precio en Google Sheet &mdash; el ROAS real podria ser mayor al reportado (' + roas.toFixed(1) + 'x)');
-    }}
-
-    if (D.eneMeta > 0 && D.febMeta > 0) {{
-        const metaChange = ((D.febMeta - D.eneMeta) / D.eneMeta) * 100;
-        if (metaChange < -20) {{
-            warn.push('Ventas META cayeron ' + hl(Math.abs(metaChange).toFixed(0) + '%') +
-                ' de Enero (' + D.eneMeta + ') a Febrero (' + D.febMeta + ') &mdash; Febrero aun no cierra pero la tendencia es preocupante');
-        }}
-    }}
-
-    if (D.slowClosers > 0 && D.totalDiasCount > 0) {{
-        const pctSlow = D.slowClosers / D.totalDiasCount * 100;
-        if (pctSlow > 15) {{
-            warn.push(hl(pctSlow.toFixed(0) + '%') + ' de las ventas META tardan mas de 30 dias en cerrar &mdash; posible problema de seguimiento comercial');
-        }}
-    }}
-
-    // === RECOMENDACIONES ===
-    if (activeCamps > 8) {{
-        rec.push(hl('Consolidar campanas:') + ' Reducir de ' + activeCamps + ' a 4-5 activas. Esto elimina Auction Overlap, concentra presupuesto y acelera la fase de aprendizaje del algoritmo');
-    }}
-
-    if (bestRoas.length > 0) {{
-        const br = bestRoas[0];
-        rec.push(hl('Escalar ' + br.name.substring(0,25) + ':') + ' ROAS de ' + br.roas.toFixed(1) + 'x con ' + br.ventas + ' ventas reales. Aumentar presupuesto 20-30% semanal sin salir de learning phase');
-    }}
-
-    if (D.topPerformers.length > 0) {{
-        rec.push(hl('Priorizar campanas eficientes:') + ' Las de CPL bajo (' + fmtCOPFull(D.topPerformers[0].cpl) + ') deben recibir mas presupuesto antes de lanzar nuevas pruebas');
-    }}
-
-    if (cpmChangePct > 15 || avgFreq > 2.5) {{
-        rec.push(hl('Rotar creativos cada 2-3 semanas:') + ' ' +
-            (cpmChangePct > 15 ? 'CPM +' + cpmChangePct.toFixed(0) + '% y ' : '') +
-            'frecuencia de ' + avgFreq.toFixed(1) + ' indican fatiga. Probar nuevos angulos: testimonios, recorridos, comparativos de precio');
-    }}
-
-    if (avgCPL > 4000) {{
-        rec.push(hl('Implementar bid cap:') + ' Con CPL promedio de ' + fmtCOPFull(avgCPL) + ', un bid cap de ' +
-            fmtCOPFull(avgCPL * 1.2) + ' controlaria el maximo sin perder volumen significativo');
-    }}
-
-    if (zeroVentasHighSpend.length > 0) {{
-        const names = zeroVentasHighSpend.slice(0,2).map(c => c.name.substring(0,20)).join(', ');
-        rec.push(hl('Pausar campanas sin conversion:') + ' ' + names + ' gastan sin generar ventas reales. Redirigir presupuesto a ganadoras');
-    }}
-
-    if (D.ventasSinPrecio > 0) {{
-        rec.push(hl('Completar precios en Sheet:') + ' ' + D.ventasSinPrecio + ' ventas META sin precio registrado. Esto subestima el ROAS real y dificulta decisiones de presupuesto');
-    }}
-
-    if (D.topAsesor) {{
-        rec.push(hl('Replicar proceso de ' + D.topAsesor.name + ':') + ' ' + D.topAsesor.count + ' ventas META cerradas &mdash; documentar su proceso de seguimiento y capacitar al resto del equipo comercial');
-    }}
-
-    if (D.topCreative) {{
-        rec.push(hl('Amplificar creativo "' + D.topCreative.name + '":') + ' ' + D.topCreative.count + ' ventas cerradas. Crear variaciones de este anuncio para escalar sin fatiga');
-    }}
-
-    // ─── RENDER ──────────────────────────
-    const now = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    const timestamp = pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-
-    document.getElementById('analysisTimestamp').innerHTML =
-        'Generado automaticamente cruzando datos de Meta Ads + Google Sheet Ventas | Rango: ' +
-        fmtDateES(fromDate) + ' &mdash; ' + fmtDateES(toDate) + ' | ' + timestamp;
-
-    const buildCard = (cls, icon, title, items) => {{
-        let html = '<div class="analysis-card ' + cls + '"><div class="analysis-card-header"><span class="analysis-icon">' + icon + '</span><h3>' + title + '</h3></div>';
-        items.slice(0,6).forEach(t => {{ html += analysisItem(t); }});
-        html += '</div>';
-        return html;
-    }};
-
-    document.getElementById('analysisGrid').innerHTML =
-        buildCard('positive', '&#9989;', 'Lo Positivo', pos) +
-        buildCard('warning', '&#9888;&#65039;', 'A Vigilar', warn) +
-        buildCard('recommend', '&#128161;', 'Recomendaciones', rec);
+async function _deriveKey(salt) {{
+    const enc = new TextEncoder();
+    const keyData = await crypto.subtle.digest('SHA-256', enc.encode(salt));
+    return new Uint8Array(keyData);
 }}
 
-// Generate on page load
-generateAnalysis();
+async function _decryptKey() {{
+    const key = await _deriveKey(_ENC_SALT);
+    const encrypted = Uint8Array.from(atob(_ENC_KEY), c => c.charCodeAt(0));
+    const decrypted = new Uint8Array(encrypted.length);
+    for (let i = 0; i < encrypted.length; i++) {{
+        decrypted[i] = encrypted[i] ^ key[i % key.length];
+    }}
+    return new TextDecoder().decode(decrypted);
+}}
+
+function _highlightText(text) {{
+    return text.replace(/(\\$[\\d,.]+|\\d+[.,]?\\d*%|\\d+[.,]\\d+x)/g, '<span class="analysis-highlight">$1</span>');
+}}
+
+function _buildCardHTML(cls, icon, title, items) {{
+    let html = '<div class="analysis-card ' + cls + '"><div class="analysis-card-header"><span class="analysis-icon">' + icon + '</span><h3>' + title + '</h3></div>';
+    items.slice(0, 8).forEach(item => {{
+        html += '<div class="analysis-item"><span class="analysis-bullet"></span><span>' + _highlightText(item) + '</span></div>';
+    }});
+    html += '</div>';
+    return html;
+}}
+
+async function refreshAnalysis() {{
+    const btn = document.getElementById('btnRefreshAI');
+    const grid = document.getElementById('analysisGrid');
+    const ts = document.getElementById('analysisTimestamp');
+
+    btn.disabled = true;
+    btn.innerHTML = '&#9203; Generando...';
+    btn.style.opacity = '0.6';
+    ts.textContent = 'Conectando con OpenAI...';
+
+    try {{
+        const apiKey = await _decryptKey();
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {{
+            method: 'POST',
+            headers: {{
+                'Authorization': 'Bearer ' + apiKey,
+                'Content-Type': 'application/json',
+            }},
+            body: JSON.stringify({{
+                model: 'gpt-4o-mini',
+                messages: [
+                    {{ role: 'system', content: _SYS_PROMPT }},
+                    {{ role: 'user', content: _USR_PROMPT }},
+                ],
+                temperature: 0.7,
+                max_tokens: 2500,
+            }}),
+        }});
+
+        if (!response.ok) {{
+            const err = await response.text();
+            throw new Error('API ' + response.status + ': ' + err.substring(0, 200));
+        }}
+
+        const data = await response.json();
+        let content = data.choices[0].message.content.trim();
+
+        // Strip markdown code fences if present
+        if (content.startsWith('```')) {{
+            content = content.split('\n').slice(1).join('\n');
+        }}
+        if (content.endsWith('```')) {{
+            content = content.slice(0, -3);
+        }}
+        content = content.trim();
+
+        const analysis = JSON.parse(content);
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const timestamp = pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+
+        grid.innerHTML =
+            _buildCardHTML('positive', '&#9989;', 'Lo Positivo', analysis.positivo || []) +
+            _buildCardHTML('warning', '&#9888;&#65039;', 'A Vigilar', analysis.vigilar || []) +
+            _buildCardHTML('recommend', '&#128161;', 'Recomendaciones', analysis.recomendaciones || []);
+
+        ts.innerHTML = 'Actualizado por OpenAI (gpt-4o-mini) | ' + timestamp + ' | <span style="color:var(--accent-cyan)">&#9889; Refresh exitoso</span>';
+
+    }} catch (e) {{
+        ts.innerHTML = '<span style="color:var(--accent-red)">&#9888; Error: ' + e.message.substring(0, 150) + '</span>';
+        console.error('OpenAI refresh error:', e);
+    }} finally {{
+        btn.disabled = false;
+        btn.innerHTML = '&#9889; Actualizar Analisis';
+        btn.style.opacity = '1';
+    }}
+}}
 
 </script>
 </body>
