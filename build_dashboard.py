@@ -1285,6 +1285,37 @@ analysis_section_html = f'''<!-- AI-POWERED ANALYSIS (OpenAI) -->
 </div>'''
 print("AI Analysis section generated.")
 
+# Pre-compute JSON for campaign/adset/daily data embedding in JS
+_campaigns_js = json.dumps([{
+    'name': c['name'], 'id': c['id'], 'spend': c['spend'], 'leads': c['leads'],
+    'cpl': round(c['cpl']), 'ctr': round(c['ctr'], 2), 'cpm': round(c['cpm']),
+    'reach': c['reach'], 'impressions': c['impressions'],
+    'frequency': round(c.get('frequency', 0), 2),
+    'video_views': c['video_views'], 'engagement': c['post_engagement'],
+    'messaging': c['messaging'], 'is_active': c.get('is_active', False)
+} for c in campaigns], ensure_ascii=False)
+
+_adsets_js = json.dumps([{
+    'campaign_name': a['campaign_name'], 'name': a['name'],
+    'spend': a['spend'], 'leads': a['leads'], 'cpl': round(a['cpl']),
+    'ctr': round(a['ctr'], 2), 'reach': a['reach'],
+    'impressions': a['impressions'],
+    'frequency': round(a.get('frequency', 0), 2),
+    'is_active': a.get('is_active', False)
+} for a in adsets], ensure_ascii=False)
+
+_daily_raw_js = json.dumps([
+    [
+        r['date_start'], r['campaign_name'],
+        round(float(r.get('spend', 0))),
+        int(sum(int(a['value']) for a in r.get('actions', []) if a['action_type'] == 'lead')),
+        int(r.get('impressions', 0)), int(r.get('clicks', 0)),
+        int(r.get('reach', 0)), round(float(r.get('ctr', 0)), 2),
+        round(float(r.get('cpm', 0)))
+    ]
+    for r in sorted(daily_raw['data'], key=lambda x: x['date_start'])
+])
+
 html = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -2461,6 +2492,13 @@ const ALL_CLICKS = {json.dumps([daily_agg[d]['clicks'] for d in daily_dates])};
 const ALL_REACH = {json.dumps([daily_agg[d]['reach'] for d in daily_dates])};
 const ALL_VENTAS = {json.dumps(ventas_json_list)};
 
+// ── CAMPAIGN & ADSET DATA (for dynamic prompt) ─────────
+const ALL_CAMPAIGNS = {_campaigns_js};
+
+const ALL_ADSETS = {_adsets_js};
+
+// Per-campaign daily data (compact: [date, campaign_name, spend, leads, impressions, clicks, reach, ctr, cpm])
+const ALL_DAILY_RAW = {_daily_raw_js};
 // Mutable working arrays
 let dailyLabels = [...ALL_LABELS];
 let dailySpend = [...ALL_SPEND];
@@ -2972,13 +3010,204 @@ function filterVentas(mes) {{
 const _ENC_KEY = "{_enc_key_b64}";
 const _ENC_SALT = "meta-ads-los-lagos-2026";
 const _SYS_PROMPT = {_system_prompt_js};
-const _USR_PROMPT = {_user_prompt_js};
+const _USR_PROMPT_TEMPLATE = {_user_prompt_js};
 
-// Populate prompt viewer
+// ── Dynamic prompt builder based on date range ──
+function _buildDynamicPrompt() {{
+    const NL = String.fromCharCode(10);
+    const fromVal = document.getElementById('dateFrom').value;
+    const toVal = document.getElementById('dateTo').value;
+    if (!fromVal || !toVal) return _USR_PROMPT_TEMPLATE;
+
+    // ── Filter daily aggregated data by range ──
+    const idxStart = ALL_DATES.findIndex(d => d >= fromVal);
+    const idxEnd = ALL_DATES.findIndex(d => d > toVal);
+    const end = idxEnd === -1 ? ALL_DATES.length : idxEnd;
+    const start = idxStart === -1 ? 0 : idxStart;
+    const numDays = end - start;
+    if (numDays <= 0) return _USR_PROMPT_TEMPLATE;
+
+    const fmt = n => Math.round(n).toLocaleString('es-CO');
+
+    // ── Filter per-campaign daily data by range ──
+    // ALL_DAILY_RAW: [date, camp_name, spend, leads, impr, clicks, reach, ctr, cpm]
+    const filteredDaily = ALL_DAILY_RAW.filter(r => r[0] >= fromVal && r[0] <= toVal);
+
+    // ── Aggregate per-campaign for the filtered range ──
+    const campAgg = {{}};
+    filteredDaily.forEach(r => {{
+        const name = r[1];
+        if (!campAgg[name]) campAgg[name] = {{spend:0, leads:0, impr:0, clicks:0, reach:0}};
+        campAgg[name].spend += r[2];
+        campAgg[name].leads += r[3];
+        campAgg[name].impr += r[4];
+        campAgg[name].clicks += r[5];
+        campAgg[name].reach += r[6];
+    }});
+
+    // ── Build active campaigns list with filtered metrics ──
+    const activeCamps = ALL_CAMPAIGNS.filter(c => c.is_active);
+    const pausedCamps = ALL_CAMPAIGNS.filter(c => !c.is_active);
+    const activeAdsets = ALL_ADSETS.filter(a => a.is_active);
+
+    // Enrich campaigns with filtered data
+    const campData = activeCamps.map(c => {{
+        const agg = campAgg[c.name] || {{spend:0, leads:0, impr:0, clicks:0, reach:0}};
+        const cpl = agg.leads > 0 ? agg.spend / agg.leads : 0;
+        const ctr = agg.impr > 0 ? (agg.clicks / agg.impr * 100) : 0;
+        const freq = agg.reach > 0 ? (agg.impr / agg.reach) : 0;
+        return {{name: c.name, spend: agg.spend, leads: agg.leads, cpl, ctr, freq, reach: agg.reach, impr: agg.impr}};
+    }}).filter(c => c.spend > 0).sort((a,b) => b.spend - a.spend);
+
+    // Enrich adsets - aggregate per adset from daily (by campaign match)
+    const adsetData = activeAdsets.map(a => {{
+        // Use campaign-level daily to get ratio for this adset (proportional)
+        // Since daily is per-campaign, use adset's original proportions within its campaign
+        const campTotal = ALL_CAMPAIGNS.find(c => c.name === a.campaign_name);
+        const campFiltered = campAgg[a.campaign_name];
+        if (!campTotal || !campFiltered || campTotal.spend === 0) return null;
+        const ratio = campFiltered.spend / campTotal.spend;
+        const spend = a.spend * ratio;
+        const leads = Math.round(a.leads * ratio);
+        const cpl = leads > 0 ? spend / leads : 0;
+        const impr = Math.round(a.impressions * ratio);
+        const reach = Math.round(a.reach * ratio);
+        const ctr = impr > 0 ? (Math.round(a.ctr * 100) / 100) : 0;
+        const freq = a.frequency;
+        return {{campaign: a.campaign_name, name: a.name, spend, leads, cpl, ctr, freq, reach}};
+    }}).filter(a => a && a.spend > 0).sort((a,b) => b.spend - a.spend);
+
+    // Paused campaigns with filtered data
+    const pausedData = pausedCamps.map(c => {{
+        const agg = campAgg[c.name] || {{spend:0, leads:0}};
+        const cpl = agg.leads > 0 ? agg.spend / agg.leads : 0;
+        return {{name: c.name, spend: agg.spend, leads: agg.leads, cpl}};
+    }}).sort((a,b) => b.spend - a.spend);
+
+    // ── Account-level totals for filtered range ──
+    const fSpend = ALL_SPEND.slice(start, end);
+    const fLeads = ALL_LEADS.slice(start, end);
+    const fImpr = ALL_IMPRESSIONS.slice(start, end);
+    const fClicks = ALL_CLICKS.slice(start, end);
+    const fReach = ALL_REACH.slice(start, end);
+    const fLabels = ALL_LABELS.slice(start, end);
+    const fCPL = ALL_CPL.slice(start, end);
+    const fCTR = ALL_CTR.slice(start, end);
+
+    const sumSpend = fSpend.reduce((a,b) => a+b, 0);
+    const sumLeads = fLeads.reduce((a,b) => a+b, 0);
+    const sumImpr = fImpr.reduce((a,b) => a+b, 0);
+    const sumClicks = fClicks.reduce((a,b) => a+b, 0);
+    const sumReach = fReach.reduce((a,b) => a+b, 0);
+    const avgCPL = sumLeads > 0 ? sumSpend / sumLeads : 0;
+    const avgCTR = sumImpr > 0 ? (sumClicks / sumImpr * 100) : 0;
+    const avgCPM = sumImpr > 0 ? (sumSpend / sumImpr * 1000) : 0;
+    const avgCPC = sumClicks > 0 ? (sumSpend / sumClicks) : 0;
+    const cplUSD = avgCPL / 4400;
+
+    // Video views & engagement from active campaigns (proportional)
+    let totalVV = 0, totalEng = 0, totalMsg = 0;
+    activeCamps.forEach(c => {{
+        const campOrig = campAgg[c.name];
+        if (campOrig && c.spend > 0) {{
+            const ratio = campOrig.spend / c.spend;
+            totalVV += Math.round(c.video_views * ratio);
+            totalEng += Math.round(c.engagement * ratio);
+            totalMsg += Math.round(c.messaging * ratio);
+        }}
+    }});
+
+    // ── Daily trend (last 7 of filtered range) ──
+    const trendN = Math.min(7, numDays);
+    const tS = numDays - trendN;
+    let dailyLines = [];
+    for (let i = tS; i < numDays; i++) {{
+        const d = ALL_DATES.slice(start, end)[i];
+        dailyLines.push('  - ' + d + ' | Spend: $' + fmt(fSpend[i]) + ' | Leads: ' + fLeads[i] + ' | CPL: $' + fmt(fCPL[i]) + ' | CTR: ' + fCTR[i] + '%');
+    }}
+
+    // ── Weekly comparison within range ──
+    const midE = Math.max(0, numDays - 7);
+    const midW = Math.max(0, numDays - 14);
+    const w1Spend = fSpend.slice(midW, midE).reduce((a,b) => a+b, 0);
+    const w1Leads = fLeads.slice(midW, midE).reduce((a,b) => a+b, 0);
+    const w1CPL = w1Leads > 0 ? w1Spend / w1Leads : 0;
+    const w2Spend = fSpend.slice(midE).reduce((a,b) => a+b, 0);
+    const w2Leads = fLeads.slice(midE).reduce((a,b) => a+b, 0);
+    const w2CPL = w2Leads > 0 ? w2Spend / w2Leads : 0;
+
+    // ── Campaign lines ──
+    const campLines = campData.map(c =>
+        '  - ' + c.name + ' | Spend: $' + fmt(c.spend) + ' | Leads: ' + c.leads + ' | CPL: $' + fmt(c.cpl) + ' | CTR: ' + c.ctr.toFixed(2) + '% | Freq: ' + c.freq.toFixed(2) + ' | Reach: ' + fmt(c.reach) + ' | Impr: ' + fmt(c.impr)
+    );
+    const pausedLines = pausedData.filter(c => c.spend > 0).map(c =>
+        '  - ' + c.name + ' | Spend: $' + fmt(c.spend) + ' | Leads: ' + c.leads + ' | CPL: $' + fmt(c.cpl)
+    );
+    const adsetLines = adsetData.map(a =>
+        '  - ' + a.campaign + ' -> ' + a.name + ' | Spend: $' + fmt(a.spend) + ' | Leads: ' + a.leads + ' | CPL: $' + fmt(a.cpl) + ' | CTR: ' + a.ctr.toFixed(2) + '% | Freq: ' + a.freq.toFixed(2) + ' | Reach: ' + fmt(a.reach)
+    );
+
+    // ── Build the full prompt from scratch ──
+    const prompt = 'Analiza estos datos de Meta Ads para Los Lagos Condominio y genera recomendaciones:' + NL + NL +
+        'RESUMEN GENERAL (periodo: ' + fromVal + ' a ' + toVal + ', ' + numDays + ' dias):' + NL +
+        '- Inversion total: $' + fmt(sumSpend) + ' COP' + NL +
+        '- Leads totales: ' + fmt(sumLeads) + NL +
+        '- CPL promedio: $' + fmt(avgCPL) + ' COP (~$' + cplUSD.toFixed(2) + ' USD)' + NL +
+        '- CTR: ' + avgCTR.toFixed(2) + '%' + NL +
+        '- CPM: $' + fmt(avgCPM) + ' COP' + NL +
+        '- CPC: $' + fmt(avgCPC) + ' COP' + NL +
+        '- Impresiones: ' + fmt(sumImpr) + NL +
+        '- Alcance: ' + fmt(sumReach) + NL +
+        '- Video Views: ' + fmt(totalVV) + NL +
+        '- Engagement: ' + fmt(totalEng) + NL +
+        '- Mensajeria: ' + fmt(totalMsg) + NL + NL +
+        'ESTADO DE CUENTA:' + NL +
+        '- Campanas activas (ON): ' + campData.length + ' de ' + ALL_CAMPAIGNS.length + NL +
+        '- Conjuntos activos: ' + adsetData.length + ' de ' + ALL_ADSETS.length + NL +
+        '- Campanas pausadas: ' + pausedCamps.length + NL + NL +
+        'CAMPANAS ACTIVAS (ordenadas por inversion, datos del periodo seleccionado):' + NL +
+        (campLines.length > 0 ? campLines.join(NL) : '  Ninguna con gasto en este periodo') + NL + NL +
+        'CAMPANAS PAUSADAS:' + NL +
+        (pausedLines.length > 0 ? pausedLines.join(NL) : '  Ninguna') + NL + NL +
+        'CONJUNTOS DE ANUNCIOS ACTIVOS (ordenados por inversion):' + NL +
+        (adsetLines.length > 0 ? adsetLines.join(NL) : '  Ninguno con gasto en este periodo') + NL + NL +
+        'TENDENCIA DIARIA (ultimos ' + trendN + ' dias):' + NL +
+        dailyLines.join(NL) + NL + NL +
+        'TENDENCIA SEMANAL:' + NL +
+        '- Semana anterior: Spend $' + fmt(w1Spend) + ' | Leads: ' + w1Leads + ' | CPL: $' + fmt(w1CPL) + NL +
+        '- Ultima semana: Spend $' + fmt(w2Spend) + ' | Leads: ' + w2Leads + ' | CPL: $' + fmt(w2CPL) + NL + NL +
+        'BENCHMARKS SECTOR INMOBILIARIO COLOMBIA:' + NL +
+        '- CTR promedio: 0.9% - 1.5%' + NL +
+        '- CPM promedio: $5,000 - $12,000 COP' + NL +
+        '- Frecuencia ideal: < 2.5' + NL +
+        '- CPL competitivo real estate: $8,000 - $25,000 COP' + NL + NL +
+        'Responde ESTRICTAMENTE en JSON valido con esta estructura (sin markdown, sin ' + '`' + '`' + '`' + 'json, solo el JSON puro):' + NL +
+        '{{' + NL +
+        '  "positivo": ["item1", "item2", ...maximo 6 items],' + NL +
+        '  "vigilar": ["item1", "item2", ...maximo 6 items],' + NL +
+        '  "recomendaciones": ["item1", "item2", ...maximo 6 items]' + NL +
+        '}}' + NL + NL +
+        'REGLAS:' + NL +
+        '1. Cada item: 1-2 oraciones con datos numericos especificos' + NL +
+        '2. "positivo": Metricas que funcionan bien vs benchmarks inmobiliarios' + NL +
+        '3. "vigilar": Senales de alerta, tendencias negativas, riesgos de Auction Overlap, fatiga, learning phase' + NL +
+        '4. "recomendaciones": Acciones concretas y especificas para optimizar Meta Ads' + NL +
+        '5. Mencionar nombres de campanas y conjuntos especificos cuando sea relevante' + NL +
+        '6. NO mencionar Google Sheets, ventas reales, ROAS de ventas ni datos externos' + NL +
+        '7. Solo metricas de Meta Ads API';
+
+    return prompt;
+}}
+
+// Populate prompt viewer with initial prompt
+let _currentPrompt = _USR_PROMPT_TEMPLATE;
 document.getElementById('systemPromptText').textContent = _SYS_PROMPT;
-document.getElementById('userPromptText').textContent = _USR_PROMPT;
+document.getElementById('userPromptText').textContent = _currentPrompt;
 
 function togglePrompt() {{
+    // Refresh prompt display with current dynamic values
+    _currentPrompt = _buildDynamicPrompt();
+    document.getElementById('userPromptText').textContent = _currentPrompt;
     const el = document.getElementById('promptViewer');
     el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }}
@@ -3024,6 +3253,12 @@ async function refreshAnalysis() {{
 
     try {{
         const apiKey = await _decryptKey();
+        const dynamicPrompt = _buildDynamicPrompt();
+        _currentPrompt = dynamicPrompt;
+        const fromD = document.getElementById('dateFrom').value;
+        const toD = document.getElementById('dateTo').value;
+        ts.textContent = 'Analizando periodo ' + fromD + ' a ' + toD + '...';
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {{
             method: 'POST',
             headers: {{
@@ -3034,7 +3269,7 @@ async function refreshAnalysis() {{
                 model: 'gpt-4o-mini',
                 messages: [
                     {{ role: 'system', content: _SYS_PROMPT }},
-                    {{ role: 'user', content: _USR_PROMPT }},
+                    {{ role: 'user', content: dynamicPrompt }},
                 ],
                 temperature: 0.7,
                 max_tokens: 2500,
