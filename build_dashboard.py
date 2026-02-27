@@ -494,7 +494,10 @@ def build_ventas_source_rows():
     for src, data in sorted(ventas_by_source.items(), key=lambda x: -x[1]['revenue']):
         pct_count = (data['count'] / ventas_total_count * 100) if ventas_total_count else 0
         pct_rev = (data['revenue'] / ventas_total_revenue * 100) if ventas_total_revenue else 0
-        rev_display = f"${data['revenue']:,.0f}".replace(",", ".")
+        if data['revenue'] > 0:
+            rev_display = f"${data['revenue']:,.0f}".replace(",", ".")
+        else:
+            rev_display = '<span style="color:var(--text-muted);font-size:11px">Sin dato</span>'
         color = '#4361ee' if src == 'META' else '#8892b0'
         rows.append(f"""<tr>
             <td style="font-weight:600; color:{color}">{src}</td>
@@ -513,7 +516,12 @@ def build_campaign_roas_rows():
         if cr['spend'] == 0:
             continue
         spend_d = f"${cr['spend']:,.0f}".replace(",", ".")
-        rev_d = f"${cr['revenue']:,.0f}".replace(",", ".") if cr['revenue'] > 0 else "-"
+        if cr['revenue'] > 0:
+            rev_d = f"${cr['revenue']:,.0f}".replace(",", ".")
+        elif cr['ventas'] > 0:
+            rev_d = '<span style="color:var(--accent-orange);font-size:11px">Pendiente</span>'
+        else:
+            rev_d = "-"
         roas_d = f"{cr['roas']:.1f}x" if cr['roas'] > 0 else "-"
         conv_d = f"{cr['conversion_rate']:.1f}%" if cr['conversion_rate'] > 0 else "-"
         cps_d = f"${cr['cost_per_sale']:,.0f}".replace(",", ".") if cr['cost_per_sale'] > 0 else "-"
@@ -558,7 +566,12 @@ def build_creative_ventas_rows():
     """Build rows for creative performance by actual sales."""
     rows = []
     for ad, data in sorted(meta_ventas_by_creative.items(), key=lambda x: -x[1]['count'])[:12]:
-        rev_d = f"${data['revenue']:,.0f}".replace(",", ".")
+        if data['revenue'] > 0:
+            rev_d = f"${data['revenue']:,.0f}".replace(",", ".")
+        elif data['count'] > 0:
+            rev_d = '<span style="color:var(--accent-orange);font-size:11px">Precio pendiente</span>'
+        else:
+            continue
         rows.append(f"""<tr>
             <td style="font-weight:600">{ad}</td>
             <td class="num">{data['count']}</td>
@@ -601,6 +614,17 @@ def build_performer_cards(performers, is_top=True):
 
 # ── Generate HTML ───────────────────────────────────────────────────────────
 now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+# Dynamic date range from daily data
+def format_date_es(date_str):
+    """Convert YYYY-MM-DD to 'DD Mon YYYY' in Spanish."""
+    meses = {'01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun',
+             '07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'}
+    parts = date_str.split('-')
+    return f"{int(parts[2])} {meses[parts[1]]} {parts[0]}"
+
+date_start_str = format_date_es(daily_dates[0]) if daily_dates else "?"
+date_end_str = format_date_es(daily_dates[-1]) if daily_dates else "?"
 
 html = f"""<!DOCTYPE html>
 <html lang="es">
@@ -1079,7 +1103,7 @@ tbody tr:hover {{
             <div class="account-id">act_1089998585939349</div>
         </div>
         <div class="header-right">
-            <div class="date-range">28 Ene 2026 &mdash; 26 Feb 2026</div>
+            <div class="date-range">{date_start_str} &mdash; {date_end_str}</div>
             <div class="updated">Ultima actualizacion: {now_str}</div>
         </div>
     </div>
