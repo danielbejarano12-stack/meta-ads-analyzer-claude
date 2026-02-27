@@ -616,14 +616,13 @@ tbody tr:hover {
     color-scheme: dark;
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.25s ease;
-    -webkit-appearance: none;
-    appearance: none;
-    min-width: 140px;
+    min-width: 150px;
+    position: relative;
 }
 .date-range-picker input[type="date"]:hover {
     border-color: var(--accent-blue);
@@ -635,13 +634,16 @@ tbody tr:hover {
     box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
 }
 .date-range-picker input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
     cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-.date-range-picker input[type="date"]::-webkit-calendar-picker-indicator:hover {
-    opacity: 1;
+    background: transparent;
 }
 .date-range-picker label {
     color: var(--text-muted);
@@ -699,7 +701,7 @@ tbody tr:hover {
         </div>
         <div class="header-right">
             <div class="date-range">28 Ene 2026 &mdash; 26 Feb 2026</div>
-            <div class="updated">Ultima actualizacion: 27/02/2026 13:02</div>
+            <div class="updated">Ultima actualizacion: 27/02/2026 13:16</div>
         </div>
     </div>
 </div>
@@ -798,7 +800,7 @@ tbody tr:hover {
         </div>
     </div>
     <div style="font-size:11px;color:var(--text-muted);margin:4px 0 16px 0;" id="analysisTimestamp">
-        Generado por OpenAI (gpt-4o-mini) | Datos: Meta Ads API | 27/02/2026 13:02
+        Generado por OpenAI (gpt-4o-mini) | Datos: Meta Ads API | 27/02/2026 13:16
     </div>
     <!-- Prompt viewer (hidden by default) -->
     <div id="promptViewer" style="display:none;margin-bottom:20px;background:var(--bg-card-alt);border:1px solid var(--border-color);border-radius:12px;padding:16px;max-height:400px;overflow-y:auto;">
@@ -818,32 +820,23 @@ tbody tr:hover {
     <div class="analysis-grid" id="analysisGrid">
         <div class="analysis-card positive">
             <div class="analysis-card-header"><span class="analysis-icon">&#9989;</span><h3>Lo Positivo</h3></div>
-            <div class="analysis-item"><span class="analysis-bullet"></span><span>El CPL promedio de <span class="analysis-highlight">$5,729</span> COP es competitivo frente al benchmark de <span class="analysis-highlight">$8,000</span> - <span class="analysis-highlight">$25,000</span> COP en el sector inmobiliario.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>Con un <span class="analysis-highlight">CTR de 3.30%</span>, se encuentra por encima del promedio del sector, que es de <span class="analysis-highlight">0.9%</span> - <span class="analysis-highlight">1.5%</span>.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>El CPM de <span class="analysis-highlight">$6,257</span> COP está dentro del rango del benchmark de <span class="analysis-highlight">$5,000</span> - <span class="analysis-highlight">$12,000</span> COP, lo que indica un costo razonable por impresión.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>La frecuencia promedio de 1.82 en las campañas activas es ideal, ya que se mantiene por debajo del umbral de 2.5, lo que evita la saturación.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>El engagement total de 380,674 demuestra un buen nivel de interacción con los anuncios, lo que puede ayudar a aumentar el reconocimiento de marca.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>La campaña 20/10/25_CP_EVENTO26OCT_FORM muestra un <span class="analysis-highlight">CPL de $3,861,</span> lo cual es bastante efectivo comparado con otras campañas.</span></div>
+            <div class="analysis-item"><span class="analysis-bullet"></span><span>El CTR promedio de <span class="analysis-highlight">3.30%</span> es significativamente superior al benchmark del sector inmobiliario en Colombia (<span class="analysis-highlight">0.9%</span> - <span class="analysis-highlight">1.5%</span>).</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>El CPL promedio de <span class="analysis-highlight">$5,729</span> COP está por debajo del rango competitivo de <span class="analysis-highlight">$8,000</span> - <span class="analysis-highlight">$25,000</span> COP, lo que indica una buena eficiencia en la adquisición de leads.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La tasa de engagement de 380,674 en relación con las impresiones de 1,531,067 sugiere un buen nivel de interacción con el contenido.</span></div>
 
         </div>
         <div class="analysis-card warning">
             <div class="analysis-card-header"><span class="analysis-icon">&#9888;&#65039;</span><h3>A Vigilar</h3></div>
-            <div class="analysis-item"><span class="analysis-bullet"></span><span>La campaña 31/10/25_RECON_MENSAJESIG tiene un CPL extremadamente alto de <span class="analysis-highlight">$298,914,</span> lo que indica un problema de eficiencia en la generación de leads.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>La última semana mostró un aumento en el CPL a <span class="analysis-highlight">$3,231,</span> un incremento respecto a la semana anterior de <span class="analysis-highlight">$9,181,</span> lo que puede señalar una tendencia a vigilar.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>El conjunto 22/11/25_TRAFGRAL_WEB tiene un <span class="analysis-highlight">CTR del 17.82%</span> pero no ha generado leads, lo que indica un posible problema de calidad en el tráfico.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>La tendencia diaria muestra fluctuaciones en el CPL y CPM, particularmente el 2026-02-26 donde el CPM alcanzó <span class="analysis-highlight">$12,677,</span> lo que puede afectar el presupuesto.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>La campaña 31/10/25_TRAF_IG no ha generado leads a pesar de un CTR alto, lo que podría ser una señal de falta de relevancia para la audiencia.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>El hecho de que 6 de 20 campañas estén pausadas puede indicar que algunas no están generando resultados satisfactorios, lo que podría afectar el aprendizaje del sistema.</span></div>
+            <div class="analysis-item"><span class="analysis-bullet"></span><span>La frecuencia promedio de 2.34 está cerca del límite superior ideal (< 2.5), lo que podría indicar un inicio de fatiga creativa.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La campaña '31/10/25_RECON_MENSAJESIG' presenta un CPL extremadamente alto de <span class="analysis-highlight">$298,914,</span> lo que sugiere un mal desempeño que necesita revisión inmediata.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>La tendencia de CPL en la última semana ha disminuido a <span class="analysis-highlight">$3,231,</span> pero la tendencia diaria muestra fluctuaciones preocupantes que podrían afectar la estabilidad.</span></div>
 
         </div>
         <div class="analysis-card recommend">
             <div class="analysis-card-header"><span class="analysis-icon">&#128161;</span><h3>Recomendaciones</h3></div>
-            <div class="analysis-item"><span class="analysis-bullet"></span><span>Revisar y optimizar la campaña 31/10/25_RECON_MENSAJESIG para disminuir el CPL, posiblemente ajustando la segmentación o el contenido del anuncio.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>Aumentar el presupuesto en la campaña 20/10/25_CP_EVENTO26OCT_FORM, que ha demostrado eficiencia con un CPL bajo de <span class="analysis-highlight">$3,861</span> y un buen número de leads.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>Evaluar los anuncios con bajo rendimiento como 31/10/25_TRAF_IG y 22/11/25_TRAFGRAL_WEB, y considerar pausarlos o modificar su contenido y segmentación.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>Implementar pruebas A/B con creativos nuevos en las campañas que están en la fase de aprendizaje para mejorar el rendimiento y evitar la fatiga creativa.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>Monitorear la frecuencia de las campañas activas y, si se acerca a 2.5, considerar rotar creativos para mantener el interés del público.</span></div>
-<div class="analysis-item"><span class="analysis-bullet"></span><span>Aprovechar el alto engagement de 380,674 para crear anuncios que fomenten la interacción directa, como encuestas o comentarios, para seguir con la conversación con la audiencia.</span></div>
+            <div class="analysis-item"><span class="analysis-bullet"></span><span>Optimizar la campaña '18/11/25_CP_PRUEBACA_FORM', que tiene un <span class="analysis-highlight">CPL de $8,207,</span> ajustando el presupuesto hacia las que tienen mejor rendimiento como '20/10/25_CP_EVENTO26OCT_FORM' con <span class="analysis-highlight">CPL de $3,861.</span></span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Reducir la inversión en campañas con CPL por encima de <span class="analysis-highlight">$6,000</span> COP como '31/10/25_RECON_MENSAJESIG' y '31/10/25_TRAF_IG', que no están generando leads.</span></div>
+<div class="analysis-item"><span class="analysis-bullet"></span><span>Implementar pruebas A/B en creativos y mensajes de las campañas con mejor CTR, como '07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM', para mantener la frescura del contenido y evitar la fatiga.</span></div>
 
         </div>
     </div>
@@ -2281,7 +2274,7 @@ tbody tr:hover {
 
 <!-- FOOTER -->
 <div class="footer">
-    Los Lagos Condominio &mdash; Dashboard Meta Ads + Ventas Reales &mdash; Generado automaticamente el 27/02/2026 13:02<br>
+    Los Lagos Condominio &mdash; Dashboard Meta Ads + Ventas Reales &mdash; Generado automaticamente el 27/02/2026 13:16<br>
     Datos de Meta Ads API &bull; Ventas: Google Sheet (Cierre Campanas) &bull; Cuenta: act_1089998585939349 &bull; COP
 </div>
 
@@ -2788,6 +2781,13 @@ function filterByDateRange() {
 document.getElementById('dateFrom').addEventListener('change', filterByDateRange);
 document.getElementById('dateTo').addEventListener('change', filterByDateRange);
 
+// Open calendar on click anywhere in the input
+document.querySelectorAll('.date-range-picker input[type="date"]').forEach(inp => {
+    inp.addEventListener('click', function() {
+        try { this.showPicker(); } catch(e) {}
+    });
+});
+
 // ── SOURCE FILTER ──────────────────────────────────────
 let currentSource = 'ambos';
 
@@ -2969,12 +2969,10 @@ async function refreshAnalysis() {
         let content = data.choices[0].message.content.trim();
 
         // Strip markdown code fences if present
-        if (content.startsWith('```')) {
-            content = content.split('
-').slice(1).join('
-');
+        if (content.startsWith('`' + '``')) {
+            content = content.split(String.fromCharCode(10)).slice(1).join(String.fromCharCode(10));
         }
-        if (content.endsWith('```')) {
+        if (content.endsWith('`' + '``')) {
             content = content.slice(0, -3);
         }
         content = content.trim();

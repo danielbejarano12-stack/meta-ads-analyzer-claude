@@ -1903,14 +1903,13 @@ tbody tr:hover {{
     color-scheme: dark;
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 13px;
     font-family: inherit;
     cursor: pointer;
     transition: all 0.25s ease;
-    -webkit-appearance: none;
-    appearance: none;
-    min-width: 140px;
+    min-width: 150px;
+    position: relative;
 }}
 .date-range-picker input[type="date"]:hover {{
     border-color: var(--accent-blue);
@@ -1922,13 +1921,16 @@ tbody tr:hover {{
     box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
 }}
 .date-range-picker input[type="date"]::-webkit-calendar-picker-indicator {{
-    filter: invert(1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
     cursor: pointer;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}}
-.date-range-picker input[type="date"]::-webkit-calendar-picker-indicator:hover {{
-    opacity: 1;
+    background: transparent;
 }}
 .date-range-picker label {{
     color: var(--text-muted);
@@ -2860,6 +2862,13 @@ function filterByDateRange() {{
 document.getElementById('dateFrom').addEventListener('change', filterByDateRange);
 document.getElementById('dateTo').addEventListener('change', filterByDateRange);
 
+// Open calendar on click anywhere in the input
+document.querySelectorAll('.date-range-picker input[type="date"]').forEach(inp => {{
+    inp.addEventListener('click', function() {{
+        try {{ this.showPicker(); }} catch(e) {{}}
+    }});
+}});
+
 // ── SOURCE FILTER ──────────────────────────────────────
 let currentSource = 'ambos';
 
@@ -3041,10 +3050,10 @@ async function refreshAnalysis() {{
         let content = data.choices[0].message.content.trim();
 
         // Strip markdown code fences if present
-        if (content.startsWith('```')) {{
-            content = content.split('\n').slice(1).join('\n');
+        if (content.startsWith('`' + '``')) {{
+            content = content.split(String.fromCharCode(10)).slice(1).join(String.fromCharCode(10));
         }}
-        if (content.endsWith('```')) {{
+        if (content.endsWith('`' + '``')) {{
             content = content.slice(0, -3);
         }}
         content = content.trim();
