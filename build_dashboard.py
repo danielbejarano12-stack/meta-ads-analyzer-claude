@@ -21,6 +21,7 @@ CAMPAIGN_FILE = os.path.expanduser(
 DAILY_FILE = os.path.join(SCRIPT_DIR, "daily_insights.json")
 ADSET_FILE = os.path.join(SCRIPT_DIR, "adset_insights.json")
 VENTAS_FILE = os.path.join(SCRIPT_DIR, "ventas_2026.csv")
+RESUMEN_FILE = os.path.join(SCRIPT_DIR, "resumen_gsheet.csv")
 OUTPUT_FILE = os.path.join(SCRIPT_DIR, "dashboard.html")
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -116,12 +117,118 @@ def load_ventas(path):
     return rows
 
 
+def load_resumen(path):
+    """Load and parse the resumen general CSV (gid=0) from Google Sheet."""
+    result = {
+        'campaigns_meta': [], 'campaigns_tiktok': [],
+        'inversion_mensual': {},  # {fuente: {mes: valor}}
+        'info_comercial': {},     # {fuente: {mes: count}}
+        'asesores': {},           # {name: {mes: count}}
+        'leads_summary': {},      # {item: {mes: valor}}
+        'funnel': {},             # {item: {mes: valor}}
+        'tiempo_cierre': {},      # {fuente: avg_days}
+        'cpa': {},                # {fuente: {mes: valor}}
+    }
+    if not os.path.exists(path):
+        print(f"Warning: {path} not found.")
+        return result
+    with open(path, 'r', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        rows = list(reader)
+
+    # Parse campaign sections (META and TIKTOK)
+    section = None
+    for i, r in enumerate(rows):
+        if len(r) < 1:
+            continue
+        cell0 = r[0].strip()
+
+        # Detect section markers
+        if cell0 == 'FUENTE' and len(r) > 1 and 'INVERSIÓN' in r[1]:
+            section = 'inversion'
+            continue
+        if cell0 == 'CPA' and len(r) > 1 and 'ENERO' in r[1]:
+            section = 'cpa'
+            continue
+        if 'INFORMACION COMERCIAL' in cell0 or (len(r) > 1 and 'INFORMACION COMERCIAL' in r[1]):
+            section = 'info_comercial'
+            continue
+        if 'ASESORES' in cell0 or (len(r) > 1 and 'ASESORES' in r[1]):
+            section = 'asesores'
+            continue
+        if cell0 == 'ITEM' or (len(r) > 1 and cell0 == '' and 'LEADS' in str(r)):
+            section = 'leads'
+            continue
+        if cell0 == 'FUNNEL':
+            section = 'funnel'
+            continue
+        if 'TIEMPO PARA CERRAR' in cell0 or (len(r) > 1 and 'TIEMPO PARA CERRAR' in r[1]):
+            section = 'tiempo_cierre'
+            continue
+
+        # Parse campaign rows (top section)
+        if cell0 and not cell0.startswith('CAMPAÑA') and section is None:
+            ubic = r[3].strip() if len(r) > 3 else ''
+            if ubic == 'META' and cell0 != 'META':
+                inv = parse_cop_value(r[4]) if len(r) > 4 else 0
+                ventas = int(r[5]) if len(r) > 5 and r[5].strip().isdigit() else 0
+                feb = int(r[7]) if len(r) > 7 and r[7].strip().isdigit() else 0
+                result['campaigns_meta'].append({
+                    'name': cell0, 'inv': inv, 'ventas': ventas, 'feb': feb
+                })
+            elif ubic == 'TIKTOK' and cell0 != 'TIKTOK':
+                inv = parse_cop_value(r[4]) if len(r) > 4 else 0
+                ventas = int(r[5]) if len(r) > 5 and r[5].strip().isdigit() else 0
+                feb = int(r[7]) if len(r) > 7 and r[7].strip().isdigit() else 0
+                result['campaigns_tiktok'].append({
+                    'name': cell0, 'inv': inv, 'ventas': ventas, 'feb': feb
+                })
+
+        # Parse inversion mensual
+        if section == 'inversion' and cell0 in ('META', 'GOOGLE ADS', 'TIKTOK'):
+            result['inversion_mensual'][cell0] = parse_cop_value(r[1]) if len(r) > 1 else 0
+
+        # Parse CPA
+        if section == 'cpa' and cell0 in ('META', 'GOOGLE', 'TIKTOK', 'TOTAL CPA'):
+            result['cpa'][cell0] = parse_cop_value(r[1]) if len(r) > 1 else 0
+
+        # Parse info comercial
+        if section == 'info_comercial' and cell0 and cell0 not in ('TOTAL', '') and 'INFORMACION' not in cell0:
+            if len(r) > 2:
+                ene = int(r[1]) if r[1].strip().isdigit() else 0
+                feb = int(r[2]) if r[2].strip().isdigit() else 0
+                result['info_comercial'][cell0] = {'ENERO': ene, 'FEBRERO': feb}
+
+        # Parse leads summary
+        if section == 'leads' and cell0.startswith('LEADS') or (section == 'leads' and cell0.startswith('COSTO')):
+            result['leads_summary'][cell0] = parse_cop_value(r[1]) if len(r) > 1 else 0
+
+        # Parse funnel
+        if section == 'funnel' and cell0 and cell0 != 'FUNNEL':
+            val = r[1].strip() if len(r) > 1 else '0'
+            if val.replace('.', '').replace(',', '').isdigit():
+                result['funnel'][cell0] = parse_cop_value(val)
+            else:
+                result['funnel'][cell0] = val
+
+        # Parse tiempo cierre
+        if section == 'tiempo_cierre' and cell0 in ('META', 'GOOGLE ADS', 'TIKTOK'):
+            val = r[1].strip() if len(r) > 1 else '0'
+            try:
+                result['tiempo_cierre'][cell0] = float(val.replace(',', '.'))
+            except:
+                result['tiempo_cierre'][cell0] = 0
+
+    return result
+
+
 # ── Load data ───────────────────────────────────────────────────────────────
 print("Loading data files...")
 campaign_raw = load_json(CAMPAIGN_FILE)
 daily_raw = load_json(DAILY_FILE)
 adset_raw = load_json(ADSET_FILE)
 ventas_raw = load_ventas(VENTAS_FILE)
+resumen_raw = load_resumen(RESUMEN_FILE)
 
 # ── Process campaign-level (30-day aggregate) ───────────────────────────────
 campaigns = []
@@ -172,6 +279,21 @@ for c in campaign_raw["data"]:
         "cpl": cpl,
         "objective": objective,
     })
+
+# ── Detect ON/OFF status using recent daily data ───────────────────────────
+all_daily_dates = sorted(set(r['date_start'] for r in daily_raw['data']))
+last_3_dates = set(all_daily_dates[-3:]) if len(all_daily_dates) >= 3 else set(all_daily_dates)
+recent_spend_by_camp = defaultdict(float)
+for r in daily_raw['data']:
+    if r['date_start'] in last_3_dates:
+        recent_spend_by_camp[r['campaign_name']] += float(r.get('spend', 0))
+
+for c in campaigns:
+    c['is_active'] = recent_spend_by_camp.get(c['name'], 0) > 0
+
+active_count = sum(1 for c in campaigns if c['is_active'])
+paused_count = sum(1 for c in campaigns if not c['is_active'])
+print(f"  Campaigns: {len(campaigns)} total ({active_count} ON, {paused_count} OFF)")
 
 # Sort by spend desc
 campaigns.sort(key=lambda x: x["spend"], reverse=True)
@@ -234,6 +356,26 @@ daily_labels = []
 for d in daily_dates:
     parts = d.split("-")
     daily_labels.append(f"{parts[2]}/{parts[1]}")
+
+# Full ISO dates for JS filtering
+daily_iso_dates = daily_dates  # ['2026-01-28', '2026-01-29', ...]
+
+# Prepare ventas as JSON for JS filtering
+ventas_json_list = []
+for v in ventas_raw:
+    ventas_json_list.append({
+        'mes': v['mes'],
+        'nombre': v['nombre'],
+        'asesor': v['asesor'],
+        'lote': v['lote'],
+        'fuente': v['fuente'],
+        'campana': v['campana'],
+        'conjunto': v['conjunto'],
+        'anuncio': v['anuncio'],
+        'precio': v['precio'],
+        'dia_cierre': v['dia_cierre'],
+        'dias_cierre': v['dias_cierre'],
+    })
 
 # ── Process ad set data ─────────────────────────────────────────────────────
 adsets = []
@@ -399,8 +541,8 @@ for o in obj_labels:
     else:
         obj_labels_es.append("Otro")
 
-# ── Top & Bottom performers by CPL (only campaigns with leads) ──────────────
-lead_campaigns = [c for c in campaigns if c["leads"] > 0 and c["cpl"] > 0]
+# ── Top & Bottom performers by CPL (only active campaigns with leads) ───────
+lead_campaigns = [c for c in campaigns if c["leads"] > 0 and c["cpl"] > 0 and c.get('is_active', True)]
 lead_campaigns_sorted = sorted(lead_campaigns, key=lambda x: x["cpl"])
 top_performers = lead_campaigns_sorted[:3]
 bottom_performers = lead_campaigns_sorted[-3:]
@@ -409,12 +551,13 @@ bottom_performers.reverse()
 # ── Build campaign table rows ───────────────────────────────────────────────
 def build_campaign_rows():
     rows = []
-    # Compute CPL range for color coding
-    cpls = [c["cpl"] for c in campaigns if c["cpl"] > 0]
+    # Sort: ON campaigns first, then OFF
+    sorted_camps = sorted(campaigns, key=lambda c: (0 if c.get('is_active', True) else 1, -c['spend']))
+    cpls = [c["cpl"] for c in sorted_camps if c["cpl"] > 0]
     min_cpl = min(cpls) if cpls else 0
     max_cpl = max(cpls) if cpls else 1
 
-    for c in campaigns:
+    for c in sorted_camps:
         cpl_class = ""
         if c["cpl"] > 0:
             ratio = (c["cpl"] - min_cpl) / (max_cpl - min_cpl) if max_cpl != min_cpl else 0.5
@@ -435,12 +578,15 @@ def build_campaign_rows():
         else:
             obj_badge = '<span class="badge badge-other">Otro</span>'
 
+        is_on = c.get('is_active', True)
+        status_badge = '<span class="badge badge-leads" style="margin-left:6px">ON</span>' if is_on else '<span class="badge" style="background:rgba(255,75,75,0.15);color:#ff4b4b;margin-left:6px;font-weight:700">OFF</span>'
+        row_style = '' if is_on else ' style="opacity:0.45"'
+
         cpl_display = f'${c["cpl"]:,.0f}'.replace(",", ".") if c["cpl"] > 0 else "-"
         spend_display = f'${c["spend"]:,.0f}'.replace(",", ".")
-        cpm_display = f'${c["cpm"]:,.0f}'.replace(",", ".")
 
-        rows.append(f"""<tr>
-            <td class="campaign-name">{c['name']} {obj_badge}</td>
+        rows.append(f"""<tr{row_style}>
+            <td class="campaign-name">{c['name']} {obj_badge} {status_badge}</td>
             <td class="num">{spend_display}</td>
             <td class="num">{c['impressions']:,}</td>
             <td class="num">{c['clicks']:,}</td>
@@ -612,6 +758,161 @@ def build_performer_cards(performers, is_top=True):
     return "\n".join(cards)
 
 
+# ── Build Google Sheet comparison data ──────────────────────────────────────
+def build_sheet_comparison_section():
+    """Build HTML for multi-channel comparison from Google Sheet data."""
+    inv = resumen_raw.get('inversion_mensual', {})
+    cpa_data = resumen_raw.get('cpa', {})
+    info = resumen_raw.get('info_comercial', {})
+    funnel_data = resumen_raw.get('funnel', {})
+    tiempo = resumen_raw.get('tiempo_cierre', {})
+
+    # Inversion comparison cards
+    meta_inv = inv.get('META', 0)
+    tiktok_inv = inv.get('TIKTOK', 0)
+    google_inv = inv.get('GOOGLE ADS', 0)
+    total_inv = meta_inv + tiktok_inv + google_inv
+
+    # CPA by channel
+    meta_cpa = cpa_data.get('META', 0)
+    google_cpa = cpa_data.get('GOOGLE', 0)
+    tiktok_cpa = cpa_data.get('TIKTOK', 0)
+
+    # Ventas by source (from info comercial)
+    ventas_info = {}
+    for src, months in info.items():
+        total = sum(months.values())
+        ventas_info[src] = {'total': total, **months}
+
+    # Funnel data
+    leads_total = funnel_data.get('LEADS TOTALES', 0)
+    leads_cp = funnel_data.get('LEADS CP', 0)
+    contactos = funnel_data.get('CONTACTOS UNICOS', 0)
+    llamadas = funnel_data.get('LLAMADAS HECHAS', 0)
+    contestadas = funnel_data.get('LLAMADAS CONTESTADAS', 0)
+    visita_agendada = funnel_data.get('VISITA AGENDADA', 0)
+    visita_cumplida = funnel_data.get('VISITA CUMPLIDA', 0)
+    cierre_campana = funnel_data.get('CIERRE X CAMPA\u00d1A', 0)
+
+    # TikTok campaigns
+    tiktok_camps = resumen_raw.get('campaigns_tiktok', [])
+
+    # Pre-compute ventas counts per platform
+    meta_ventas_sheet = info.get("META", {}).get("ENERO", 0) + info.get("META", {}).get("FEBRERO", 0)
+    tiktok_ventas_sheet = info.get("TIKTOK", {}).get("ENERO", 0) + info.get("TIKTOK", {}).get("FEBRERO", 0)
+    google_ventas_sheet = info.get("GOOGLE ADS", {}).get("ENERO", 0) + info.get("GOOGLE ADS", {}).get("FEBRERO", 0)
+
+    html_parts = []
+
+    # Multi-channel investment KPIs
+    html_parts.append(f'''
+    <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+        <div class="kpi-card animate-in" style="border:1px solid rgba(67,97,238,0.3)">
+            <span class="kpi-icon">&#128312;</span>
+            <div class="kpi-label">Meta Ads</div>
+            <div class="kpi-value" style="color:var(--accent-blue)">{fmt_cop(meta_inv)}</div>
+            <div class="kpi-sub">CPA: {fmt_cop(meta_cpa) if meta_cpa else "N/A"} | {meta_ventas_sheet} ventas</div>
+        </div>
+        <div class="kpi-card animate-in" style="border:1px solid rgba(255,0,80,0.3)">
+            <span class="kpi-icon">&#127916;</span>
+            <div class="kpi-label">TikTok Ads</div>
+            <div class="kpi-value" style="color:#ff0050">{fmt_cop(tiktok_inv)}</div>
+            <div class="kpi-sub">CPA: {fmt_cop(tiktok_cpa) if tiktok_cpa else "N/A"} | {tiktok_ventas_sheet} ventas</div>
+        </div>
+        <div class="kpi-card animate-in" style="border:1px solid rgba(66,133,244,0.3)">
+            <span class="kpi-icon">&#128270;</span>
+            <div class="kpi-label">Google Ads</div>
+            <div class="kpi-value" style="color:#4285f4">{fmt_cop(google_inv)}</div>
+            <div class="kpi-sub">CPA: {fmt_cop(google_cpa) if google_cpa else "N/A"} | {google_ventas_sheet} ventas</div>
+        </div>
+        <div class="kpi-card animate-in" style="border:1px solid rgba(255,159,67,0.3)">
+            <span class="kpi-icon">&#128176;</span>
+            <div class="kpi-label">Total Multicanal</div>
+            <div class="kpi-value" style="color:var(--accent-orange)">{fmt_cop(total_inv)}</div>
+            <div class="kpi-sub">Todas las plataformas Enero 2026</div>
+        </div>
+    </div>''')
+
+    # Funnel section
+    if leads_total or contactos or llamadas:
+        funnel_items = [
+            ("Leads Totales", leads_total, "#4361ee"),
+            ("Contactos Unicos", contactos, "#7b2ff7"),
+            ("Llamadas Hechas", llamadas, "#ff9f43"),
+            ("Llamadas Contestadas", contestadas, "#00d4aa"),
+            ("Visitas Agendadas", visita_agendada, "#ff6b9d"),
+            ("Visitas Cumplidas", visita_cumplida, "#ff6b6b"),
+            ("Cierres", cierre_campana, "#00d4aa"),
+        ]
+        max_val = max(v for _, v, _ in funnel_items if isinstance(v, (int, float))) if funnel_items else 1
+
+        funnel_html = ""
+        for label, val, color in funnel_items:
+            if not isinstance(val, (int, float)) or val == 0:
+                continue
+            pct = val / max_val * 100 if max_val > 0 else 0
+            val_display = f"{int(val):,}" if isinstance(val, (int, float)) else str(val)
+            funnel_html += f'''
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+                <div style="width:160px;font-size:12px;color:var(--text-secondary);text-align:right">{label}</div>
+                <div style="flex:1;background:var(--bg-card-alt);border-radius:6px;height:28px;overflow:hidden;position:relative">
+                    <div style="background:{color};height:100%;width:{pct}%;border-radius:6px;transition:width 0.6s ease"></div>
+                    <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:var(--text-primary)">{val_display}</span>
+                </div>
+            </div>'''
+
+        html_parts.append(f'''
+    <div class="chart-grid" style="margin-top:20px">
+        <div class="section" style="margin-bottom:0">
+            <div class="section-title"><span class="icon">&#128200;</span> Funnel Comercial (Enero)</div>
+            <div style="padding:16px">{funnel_html}</div>
+        </div>
+        <div class="section" style="margin-bottom:0">
+            <div class="section-title"><span class="icon">&#9201;</span> Tiempo Promedio de Cierre (dias)</div>
+            <div class="table-wrapper"><table>
+                <thead><tr><th>Fuente</th><th>Dias Promedio</th></tr></thead>
+                <tbody>''')
+        for src in ['META', 'GOOGLE ADS', 'TIKTOK']:
+            days = tiempo.get(src, 0)
+            color = 'var(--accent-cyan)' if days and days <= 10 else 'var(--accent-orange)' if days and days <= 20 else 'var(--accent-red)'
+            html_parts.append(f'''
+                    <tr><td style="font-weight:600">{src}</td><td class="num" style="color:{color};font-weight:700">{days:.0f} dias</td></tr>''')
+        html_parts.append('''
+                </tbody>
+            </table></div>
+        </div>
+    </div>''')
+
+    # TikTok campaigns table
+    if tiktok_camps:
+        tk_rows = ""
+        for tk in tiktok_camps:
+            inv_d = fmt_cop(tk['inv']) if tk['inv'] > 0 else "-"
+            cpa_d = fmt_cop(tk['inv'] / tk['ventas']) if tk['ventas'] > 0 else "-"
+            tk_rows += f"""<tr>
+                <td class="campaign-name">{tk['name']}</td>
+                <td class="num">{inv_d}</td>
+                <td class="num" style="font-weight:700">{tk['ventas']}</td>
+                <td class="num">{cpa_d}</td>
+                <td class="num">{tk['feb']}</td>
+            </tr>"""
+        html_parts.append(f'''
+    <div class="section" style="margin-top:20px">
+        <div class="section-title"><span class="icon">&#127916;</span> Campanas TikTok (Google Sheet)</div>
+        <div class="table-wrapper"><div class="table-scroll"><table>
+            <thead><tr>
+                <th>Campana</th><th>Inversion Total</th><th>Ventas</th><th>CPA</th><th>Feb</th>
+            </tr></thead>
+            <tbody>{tk_rows}</tbody>
+        </table></div></div>
+    </div>''')
+
+    return "\n".join(html_parts)
+
+sheet_comparison_html = build_sheet_comparison_section()
+print(f"  Sheet comparison section built.")
+
+
 # ── Generate HTML ───────────────────────────────────────────────────────────
 now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
 
@@ -625,6 +926,125 @@ def format_date_es(date_str):
 
 date_start_str = format_date_es(daily_dates[0]) if daily_dates else "?"
 date_end_str = format_date_es(daily_dates[-1]) if daily_dates else "?"
+total_data_days = len(daily_dates)
+
+# ── Build dynamic filter buttons ────────────────────────────────────────────
+# Calculate which months we have data for
+data_months = set()
+if daily_dates:
+    for d in daily_dates:
+        m = d.split('-')[1]
+        data_months.add(m)
+
+# Filter buttons for Ads: show real data range options
+filter_buttons_ads = []
+if total_data_days >= 7:
+    filter_buttons_ads.append(('7', '7 dias'))
+if total_data_days >= 14:
+    filter_buttons_ads.append(('14', '14 dias'))
+if total_data_days >= 21:
+    filter_buttons_ads.append(('21', '21 dias'))
+filter_buttons_ads.append((str(total_data_days), f'Todo ({total_data_days}d)'))
+
+# Filter buttons for Ventas: dynamic from available months
+ventas_months_available = sorted(ventas_by_month.keys())
+filter_buttons_ventas = [('ALL', 'Todos')]
+for m in ventas_months_available:
+    filter_buttons_ventas.append((m, m.capitalize()))
+
+# ── Build dynamic AI analysis ───────────────────────────────────────────────
+# Analysis is now generated client-side in JavaScript for dynamic updates
+# We just need to prepare the data payload
+
+import json as _json
+
+def _safe_name(s):
+    """Escape a string for safe JS embedding."""
+    return s.replace("'", "\\'").replace('"', '\\"').replace('\n', ' ')
+
+# Prepare analysis data for JS
+_active_camps_data = []
+for c in campaigns:
+    if c.get('is_active', False):
+        _active_camps_data.append({
+            'name': c['name'],
+            'spend': round(c['spend']),
+            'leads': c['leads'],
+            'cpl': round(c['cpl']),
+            'ctr': round(c['ctr'], 2),
+            'frequency': round(c.get('frequency', 0), 2),
+        })
+
+_top_perf_data = [{'name': c['name'], 'cpl': round(c['cpl']), 'leads': c['leads']} for c in top_performers]
+_bottom_perf_data = [{'name': c['name'], 'cpl': round(c['cpl']), 'leads': c['leads']} for c in bottom_performers]
+
+# Only include active (ON) campaigns in analysis ROAS data
+_active_names = set(c['name'] for c in campaigns if c.get('is_active', False))
+
+_campaign_roas_data = []
+for cr in campaign_roas:
+    if cr['name'] in _active_names:
+        _campaign_roas_data.append({
+            'name': cr['name'],
+            'spend': round(cr['spend']),
+            'ventas': cr['ventas'],
+            'revenue': round(cr['revenue']),
+            'roas': round(cr['roas'], 1),
+        })
+
+_ventas_sin_precio_count = len([v for v in meta_ventas if v['precio'] == 0])
+
+_ene_data = ventas_by_month.get('ENERO', {'total': 0, 'meta': 0, 'meta_revenue': 0})
+_feb_data = ventas_by_month.get('FEBRERO', {'total': 0, 'meta': 0, 'meta_revenue': 0})
+
+_meta_dias_list = [v['dias_cierre'] for v in meta_ventas if v['dias_cierre'] is not None and v['dias_cierre'] > 0]
+_fast_closers_count = len([d for d in _meta_dias_list if d <= 7])
+_slow_closers_count = len([d for d in _meta_dias_list if d > 30])
+_total_dias_count = len(_meta_dias_list)
+
+_top_asesor = None
+if meta_ventas_by_asesor:
+    _top_a = max(meta_ventas_by_asesor.items(), key=lambda x: x[1]['count'])
+    _top_asesor = {'name': _top_a[0], 'count': _top_a[1]['count']}
+
+_top_creative = None
+_top_creatives_list = sorted(meta_ventas_by_creative.items(), key=lambda x: x[1]['count'], reverse=True)
+if _top_creatives_list:
+    _top_creative = {'name': _top_creatives_list[0][0], 'count': _top_creatives_list[0][1]['count']}
+
+analysis_js_data = _json.dumps({
+    'activeCampaigns': len([c for c in campaigns if c.get('is_active', False)]),
+    'activeCampsData': _active_camps_data,
+    'topPerformers': _top_perf_data,
+    'bottomPerformers': _bottom_perf_data,
+    'campaignRoas': _campaign_roas_data,
+    'metaVentasCount': meta_ventas_count,
+    'metaVentasRevenue': round(meta_ventas_revenue),
+    'ventasSinPrecio': _ventas_sin_precio_count,
+    'eneMeta': _ene_data.get('meta', 0),
+    'febMeta': _feb_data.get('meta', 0),
+    'fastClosers': _fast_closers_count,
+    'slowClosers': _slow_closers_count,
+    'totalDiasCount': _total_dias_count,
+    'topAsesor': _top_asesor,
+    'topCreative': _top_creative,
+    'totalEngagement': total_engagement,
+    'totalVideoViews': total_video_views,
+    'totalMessaging': total_messaging,
+}, ensure_ascii=False)
+
+# placeholder — the actual HTML is generated by JS
+analysis_section_html = '''<!-- AI-POWERED ANALYSIS (dynamic) -->
+<div class="analysis-section" id="analysisSection">
+    <div class="section-title"><span class="icon">&#129504;</span> Analisis IA &mdash; Insights Automaticos</div>
+    <div style="font-size:11px;color:var(--text-muted);margin:-12px 0 16px 0;" id="analysisTimestamp">
+        Generando analisis...
+    </div>
+    <div class="analysis-grid" id="analysisGrid">
+        <!-- populated by JS -->
+    </div>
+</div>'''
+print("AI Analysis section generated.")
 
 html = f"""<!DOCTYPE html>
 <html lang="es">
@@ -1081,6 +1501,229 @@ tbody tr:hover {{
     .container {{ padding: 12px; }}
 }}
 
+/* ── ANALYSIS SECTION ──────────────────────────────────── */
+.analysis-section {{
+    margin-bottom: 36px;
+    animation: fadeInUp 0.6s ease forwards;
+}}
+.analysis-grid {{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}}
+.analysis-card {{
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    position: relative;
+    overflow: hidden;
+}}
+.analysis-card::before {{
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+}}
+.analysis-card.positive::before {{ background: linear-gradient(90deg, #00d4aa, #4361ee); }}
+.analysis-card.warning::before {{ background: linear-gradient(90deg, #ff9f43, #ff6b9d); }}
+.analysis-card.recommend::before {{ background: linear-gradient(90deg, #4361ee, #7b2ff7); }}
+.analysis-card-header {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}}
+.analysis-card-header .analysis-icon {{
+    font-size: 24px;
+}}
+.analysis-card-header h3 {{
+    font-size: 16px;
+    font-weight: 700;
+}}
+.analysis-card.positive h3 {{ color: var(--accent-cyan); }}
+.analysis-card.warning h3 {{ color: var(--accent-orange); }}
+.analysis-card.recommend h3 {{ color: var(--accent-blue); }}
+.analysis-item {{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}}
+.analysis-item:last-child {{ margin-bottom: 0; }}
+.analysis-bullet {{
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 7px;
+}}
+.analysis-card.positive .analysis-bullet {{ background: var(--accent-cyan); }}
+.analysis-card.warning .analysis-bullet {{ background: var(--accent-orange); }}
+.analysis-card.recommend .analysis-bullet {{ background: var(--accent-blue); }}
+.analysis-highlight {{
+    color: var(--text-primary);
+    font-weight: 600;
+}}
+@media (max-width: 1000px) {{
+    .analysis-grid {{ grid-template-columns: 1fr; }}
+}}
+
+/* ── FILTER BAR ───────────────────────────────────────── */
+.filter-bar {{
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+}}
+.filter-bar .filter-label {{
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}}
+.filter-group {{
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}}
+.filter-btn {{
+    background: var(--bg-card-alt);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    font-family: inherit;
+}}
+.filter-btn:hover {{
+    background: rgba(67, 97, 238, 0.15);
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+}}
+.filter-btn.active {{
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 12px rgba(67, 97, 238, 0.4);
+}}
+.filter-separator {{
+    width: 1px;
+    height: 28px;
+    background: var(--border-color);
+    margin: 0 4px;
+}}
+.filter-bar .date-display {{
+    margin-left: auto;
+    color: var(--accent-cyan);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'SF Mono', monospace;
+}}
+@media (max-width: 900px) {{
+    .filter-bar {{ padding: 12px 16px; gap: 10px; }}
+    .filter-bar .date-display {{ margin-left: 0; width: 100%; text-align: center; }}
+}}
+
+/* ── SOURCE TOGGLE + DATE PICKER ──────────────────────── */
+.filter-btn.source-btn.active {{
+    box-shadow: 0 2px 12px rgba(67, 97, 238, 0.4);
+}}
+.filter-btn.source-btn[data-source="meta"].active {{
+    background: #4361ee; border-color: #4361ee; color: #fff;
+}}
+.filter-btn.source-btn[data-source="sheet"].active {{
+    background: #00d4aa; border-color: #00d4aa; color: #fff;
+}}
+.filter-btn.source-btn[data-source="ambos"].active {{
+    background: linear-gradient(135deg, #4361ee, #00d4aa); border-color: #4361ee; color: #fff;
+}}
+.date-range-picker {{
+    display: flex; align-items: center; gap: 8px;
+}}
+.date-range-picker input[type="date"] {{
+    background: var(--bg-card-alt);
+    color: var(--text-primary);
+    color-scheme: dark;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 140px;
+}}
+.date-range-picker input[type="date"]:hover {{
+    border-color: var(--accent-blue);
+    background: rgba(67, 97, 238, 0.1);
+}}
+.date-range-picker input[type="date"]:focus {{
+    border-color: var(--accent-blue);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}}
+.date-range-picker input[type="date"]::-webkit-calendar-picker-indicator {{
+    filter: invert(1);
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}}
+.date-range-picker input[type="date"]::-webkit-calendar-picker-indicator:hover {{
+    opacity: 1;
+}}
+.date-range-picker label {{
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}}
+.date-range-picker .date-sep {{
+    color: var(--text-muted); font-size: 16px;
+}}
+.section-source-meta, .section-source-sheet, .section-source-ventas {{
+    transition: opacity 0.3s ease, max-height 0.4s ease;
+}}
+.section-hidden {{
+    display: none !important;
+}}
+
+/* ── MULTICANAL SECTION ───────────────────────────────── */
+.multicanal-header {{
+    display: flex; align-items: center; gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(67,97,238,0.08), rgba(0,212,170,0.08));
+    border: 1px solid rgba(67,97,238,0.2);
+    border-radius: 16px;
+    margin-bottom: 20px;
+}}
+.multicanal-header .icon {{ font-size: 28px; }}
+.multicanal-header h2 {{
+    margin: 0; font-size: 20px; font-weight: 700;
+    background: linear-gradient(135deg, #4361ee, #00d4aa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}}
+.multicanal-header .sub {{ color: var(--text-secondary); font-size: 13px; margin-top: 2px; }}
+
 /* ── FOOTER ───────────────────────────────────────────── */
 .footer {{
     text-align: center;
@@ -1099,7 +1742,7 @@ tbody tr:hover {{
     <div class="header-content">
         <div class="header-left">
             <h1>Los Lagos Condominio</h1>
-            <div class="subtitle">Dashboard de Meta Ads &mdash; Analisis de Campanas</div>
+            <div class="subtitle">Dashboard Multicanal &mdash; Meta Ads &bull; TikTok &bull; Google Ads</div>
             <div class="account-id">act_1089998585939349</div>
         </div>
         <div class="header-right">
@@ -1111,42 +1754,68 @@ tbody tr:hover {{
 
 <div class="container">
 
-<!-- KPI CARDS -->
+<!-- FILTER BAR -->
+<div class="filter-bar">
+    <span class="filter-label">&#128640; Fuente:</span>
+    <div class="filter-group">
+        <button class="filter-btn source-btn active" data-source="ambos" onclick="filterSource('ambos')">&#127760; Ambos</button>
+        <button class="filter-btn source-btn" data-source="meta" onclick="filterSource('meta')">&#128312; Meta Ads</button>
+        <button class="filter-btn source-btn" data-source="sheet" onclick="filterSource('sheet')">&#128202; Google Sheet</button>
+    </div>
+    <div class="filter-separator"></div>
+    <span class="filter-label">&#128197; Rango Ads:</span>
+    <div class="date-range-picker">
+        <label>Desde</label>
+        <input type="date" id="dateFrom" value="{daily_dates[0] if daily_dates else ''}" min="{daily_dates[0] if daily_dates else ''}" max="{daily_dates[-1] if daily_dates else ''}" title="Fecha inicio">
+        <span class="date-sep">&rarr;</span>
+        <label>Hasta</label>
+        <input type="date" id="dateTo" value="{daily_dates[-1] if daily_dates else ''}" min="{daily_dates[0] if daily_dates else ''}" max="{daily_dates[-1] if daily_dates else ''}" title="Fecha fin">
+    </div>
+    <div class="filter-separator"></div>
+    <span class="filter-label">&#127968; Ventas:</span>
+    <div class="filter-group">
+        {''.join(f'<button class="filter-btn filter-ventas{" active" if m == "ALL" else ""}" data-mes="{m}" onclick="filterVentas(\'{m}\')">{label}</button>' for m, label in filter_buttons_ventas)}
+    </div>
+    <span class="date-display" id="dateRangeDisplay">{date_start_str} &mdash; {date_end_str}</span>
+</div>
+
+<!-- KPI CARDS (Meta Ads) -->
+<div class="section-source-meta">
 <div class="kpi-grid">
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128176;</span>
         <div class="kpi-label">Inversion Total</div>
-        <div class="kpi-value">${total_spend:,.0f}</div>
-        <div class="kpi-sub">COP (30 dias)</div>
+        <div class="kpi-value" id="kpi-spend">${total_spend:,.0f}</div>
+        <div class="kpi-sub" id="kpi-spend-sub">COP ({total_data_days} dias)</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128203;</span>
         <div class="kpi-label">Leads Totales</div>
-        <div class="kpi-value">{total_leads:,}</div>
+        <div class="kpi-value" id="kpi-leads">{total_leads:,}</div>
         <div class="kpi-sub">Formularios enviados</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128178;</span>
         <div class="kpi-label">Costo por Lead</div>
-        <div class="kpi-value">${avg_cpl:,.0f}</div>
+        <div class="kpi-value" id="kpi-cpl">${avg_cpl:,.0f}</div>
         <div class="kpi-sub">COP promedio</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128065;</span>
         <div class="kpi-label">Impresiones</div>
-        <div class="kpi-value">{total_impressions:,}</div>
-        <div class="kpi-sub">CPM: ${avg_cpm:,.0f}</div>
+        <div class="kpi-value" id="kpi-impressions">{total_impressions:,}</div>
+        <div class="kpi-sub" id="kpi-cpm-sub">CPM: ${avg_cpm:,.0f}</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#128073;</span>
         <div class="kpi-label">CTR (Total)</div>
-        <div class="kpi-value">{avg_ctr:.2f}%</div>
-        <div class="kpi-sub">{total_clicks:,} clics totales</div>
+        <div class="kpi-value" id="kpi-ctr">{avg_ctr:.2f}%</div>
+        <div class="kpi-sub" id="kpi-clicks-sub">{total_clicks:,} clics totales</div>
     </div>
     <div class="kpi-card animate-in">
         <span class="kpi-icon">&#127758;</span>
         <div class="kpi-label">Alcance</div>
-        <div class="kpi-value">{total_reach:,}</div>
+        <div class="kpi-value" id="kpi-reach">{total_reach:,}</div>
         <div class="kpi-sub">Cuentas unicas</div>
     </div>
     <div class="kpi-card animate-in">
@@ -1163,9 +1832,14 @@ tbody tr:hover {{
     </div>
 </div>
 
+{analysis_section_html}
+
+</div><!-- /section-source-meta (KPI + analysis) -->
+
 <!-- ══════════════════════════════════════════════════════ -->
-<!-- VENTAS REALES & ROAS SECTION                          -->
+<!-- VENTAS REALES & ROAS SECTION (cruce Meta + Sheet)     -->
 <!-- ══════════════════════════════════════════════════════ -->
+<div class="section-source-ventas">
 
 <!-- VENTAS KPI CARDS -->
 <div class="section">
@@ -1174,37 +1848,37 @@ tbody tr:hover {{
         <div class="kpi-card animate-in" style="border: 1px solid rgba(0,212,170,0.3);">
             <span class="kpi-icon">&#127942;</span>
             <div class="kpi-label">ROAS META</div>
-            <div class="kpi-value" style="color: {'var(--accent-cyan)' if roas >= 3 else 'var(--accent-orange)' if roas >= 1 else 'var(--accent-red)'};">{roas:.1f}x</div>
+            <div class="kpi-value" id="kpi-roas" style="color: {'var(--accent-cyan)' if roas >= 3 else 'var(--accent-orange)' if roas >= 1 else 'var(--accent-red)'};">{roas:.1f}x</div>
             <div class="kpi-sub">Revenue / Inversion Ads</div>
         </div>
         <div class="kpi-card animate-in">
             <span class="kpi-icon">&#128181;</span>
             <div class="kpi-label">Revenue META</div>
-            <div class="kpi-value">{fmt_cop(meta_ventas_revenue)}</div>
-            <div class="kpi-sub">{meta_ventas_count} lotes vendidos via Meta</div>
+            <div class="kpi-value" id="kpi-meta-revenue">{fmt_cop(meta_ventas_revenue)}</div>
+            <div class="kpi-sub" id="kpi-meta-revenue-sub">{meta_ventas_count} lotes vendidos via Meta</div>
         </div>
         <div class="kpi-card animate-in">
             <span class="kpi-icon">&#128200;</span>
             <div class="kpi-label">Revenue Total</div>
-            <div class="kpi-value">{fmt_cop(ventas_total_revenue)}</div>
-            <div class="kpi-sub">{ventas_total_count} ventas todas las fuentes</div>
+            <div class="kpi-value" id="kpi-total-revenue">{fmt_cop(ventas_total_revenue)}</div>
+            <div class="kpi-sub" id="kpi-total-revenue-sub">{ventas_total_count} ventas todas las fuentes</div>
         </div>
         <div class="kpi-card animate-in">
             <span class="kpi-icon">&#127968;</span>
             <div class="kpi-label">Ticket Promedio</div>
-            <div class="kpi-value">{fmt_cop(meta_avg_ticket)}</div>
+            <div class="kpi-value" id="kpi-ticket">{fmt_cop(meta_avg_ticket)}</div>
             <div class="kpi-sub">Precio prom. lote (META)</div>
         </div>
         <div class="kpi-card animate-in">
             <span class="kpi-icon">&#9201;</span>
             <div class="kpi-label">Dias para Cierre</div>
-            <div class="kpi-value">{meta_median_dias} dias</div>
-            <div class="kpi-sub">Mediana ({meta_avg_dias:.1f} promedio)</div>
+            <div class="kpi-value" id="kpi-dias">{meta_median_dias} dias</div>
+            <div class="kpi-sub" id="kpi-dias-sub">Mediana ({meta_avg_dias:.1f} promedio)</div>
         </div>
         <div class="kpi-card animate-in">
             <span class="kpi-icon">&#128178;</span>
             <div class="kpi-label">Costo por Venta</div>
-            <div class="kpi-value">{fmt_cop(total_spend / meta_ventas_count) if meta_ventas_count else '$0'}</div>
+            <div class="kpi-value" id="kpi-cpv">{fmt_cop(total_spend / meta_ventas_count) if meta_ventas_count else '$0'}</div>
             <div class="kpi-sub">Inversion Ads / Ventas META</div>
         </div>
     </div>
@@ -1309,10 +1983,26 @@ tbody tr:hover {{
         </div>
     </div>
 </div>
+</div><!-- /section-source-ventas (cruce) -->
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- COMPARATIVO MULTICANAL (Google Sheet)                 -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section-source-sheet">
+<div class="multicanal-header">
+    <span class="icon">&#128202;</span>
+    <div>
+        <h2>Comparativo Multicanal &mdash; Google Sheet</h2>
+        <div class="sub">Meta Ads vs TikTok vs Google Ads &mdash; Datos del resumen general (Enero 2026)</div>
+    </div>
+</div>
+{sheet_comparison_html}
+</div><!-- /section-source-sheet -->
 
 <!-- ══════════════════════════════════════════════════════ -->
 <!-- META ADS PERFORMANCE (Original Sections)              -->
 <!-- ══════════════════════════════════════════════════════ -->
+<div class="section-source-meta">
 
 <!-- DAILY SPEND & LEADS CHART -->
 <div class="section">
@@ -1420,6 +2110,7 @@ tbody tr:hover {{
         </div>
     </div>
 </div>
+</div><!-- /section-source-meta (performance) -->
 
 <!-- FOOTER -->
 <div class="footer">
@@ -1516,15 +2207,32 @@ new Chart(document.getElementById('sourceChart'), {{
     }}
 }});
 
-const dailyLabels = {json.dumps(daily_labels)};
-const dailySpend = {json.dumps(daily_spend)};
-const dailyLeads = {json.dumps(daily_leads)};
-const dailyCPL = {json.dumps(daily_cpl)};
-const dailyCTR = {json.dumps(daily_ctr)};
-const dailyCPM = {json.dumps(daily_cpm)};
+// ── FULL DATA ARRAYS (for filtering) ───────────────────
+const ALL_DATES = {json.dumps(daily_iso_dates)};
+const ALL_LABELS = {json.dumps(daily_labels)};
+const ALL_SPEND = {json.dumps(daily_spend)};
+const ALL_LEADS = {json.dumps(daily_leads)};
+const ALL_CPL = {json.dumps(daily_cpl)};
+const ALL_CTR = {json.dumps(daily_ctr)};
+const ALL_CPM = {json.dumps(daily_cpm)};
+const ALL_IMPRESSIONS = {json.dumps([daily_agg[d]['impressions'] for d in daily_dates])};
+const ALL_CLICKS = {json.dumps([daily_agg[d]['clicks'] for d in daily_dates])};
+const ALL_REACH = {json.dumps([daily_agg[d]['reach'] for d in daily_dates])};
+const ALL_VENTAS = {json.dumps(ventas_json_list)};
+
+// Mutable working arrays
+let dailyLabels = [...ALL_LABELS];
+let dailySpend = [...ALL_SPEND];
+let dailyLeads = [...ALL_LEADS];
+let dailyCPL = [...ALL_CPL];
+let dailyCTR = [...ALL_CTR];
+let dailyCPM = [...ALL_CPM];
+
+// Track current filters
+let currentMes = 'ALL';
 
 // ── DAILY SPEND & LEADS CHART ──────────────────────────
-new Chart(document.getElementById('dailyChart'), {{
+const dailyChart = new Chart(document.getElementById('dailyChart'), {{
     type: 'bar',
     data: {{
         labels: dailyLabels,
@@ -1651,7 +2359,7 @@ new Chart(document.getElementById('objectiveChart'), {{
 }});
 
 // ── CPL TREND CHART ────────────────────────────────────
-new Chart(document.getElementById('cplTrendChart'), {{
+const cplChart = new Chart(document.getElementById('cplTrendChart'), {{
     type: 'line',
     data: {{
         labels: dailyLabels,
@@ -1691,7 +2399,7 @@ new Chart(document.getElementById('cplTrendChart'), {{
 }});
 
 // ── CTR TREND CHART ────────────────────────────────────
-new Chart(document.getElementById('ctrTrendChart'), {{
+const ctrChart = new Chart(document.getElementById('ctrTrendChart'), {{
     type: 'line',
     data: {{
         labels: dailyLabels,
@@ -1729,7 +2437,7 @@ new Chart(document.getElementById('ctrTrendChart'), {{
 }});
 
 // ── CPM TREND CHART ────────────────────────────────────
-new Chart(document.getElementById('cpmTrendChart'), {{
+const cpmChart = new Chart(document.getElementById('cpmTrendChart'), {{
     type: 'line',
     data: {{
         labels: dailyLabels,
@@ -1822,6 +2530,438 @@ document.querySelectorAll('.section').forEach(el => {{
     el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
     observer.observe(el);
 }});
+
+// ══════════════════════════════════════════════════════════
+// FILTER LOGIC
+// ══════════════════════════════════════════════════════════
+
+const MESES_ES = {{'01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun',
+                   '07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'}};
+
+function fmtCOP(val) {{
+    if (val >= 1e6) return '$' + (val/1e6).toFixed(0) + 'M';
+    if (val >= 1e3) return '$' + Math.round(val).toLocaleString('es-CO');
+    return '$' + Math.round(val);
+}}
+function fmtCOPFull(val) {{
+    return '$' + Math.round(val).toLocaleString('es-CO');
+}}
+function fmtDateES(iso) {{
+    const p = iso.split('-');
+    return parseInt(p[2]) + ' ' + MESES_ES[p[1]] + ' ' + p[0];
+}}
+
+function filterByDateRange() {{
+    const fromDate = document.getElementById('dateFrom').value;
+    const toDate = document.getElementById('dateTo').value;
+    if (!fromDate || !toDate) return;
+
+    // Filter indices
+    const indices = [];
+    ALL_DATES.forEach((d, i) => {{
+        if (d >= fromDate && d <= toDate) indices.push(i);
+    }});
+
+    if (indices.length === 0) return;
+
+    const labels = indices.map(i => ALL_LABELS[i]);
+    const spend = indices.map(i => ALL_SPEND[i]);
+    const leads = indices.map(i => ALL_LEADS[i]);
+    const cpl = indices.map(i => ALL_CPL[i]);
+    const ctr = indices.map(i => ALL_CTR[i]);
+    const cpm = indices.map(i => ALL_CPM[i]);
+    const impressions = indices.map(i => ALL_IMPRESSIONS[i]);
+    const clicks = indices.map(i => ALL_CLICKS[i]);
+    const reach = indices.map(i => ALL_REACH[i]);
+
+    // Update charts
+    dailyChart.data.labels = labels;
+    dailyChart.data.datasets[0].data = spend;
+    dailyChart.data.datasets[1].data = leads;
+    dailyChart.update();
+
+    cplChart.data.labels = labels;
+    cplChart.data.datasets[0].data = cpl;
+    cplChart.update();
+
+    ctrChart.data.labels = labels;
+    ctrChart.data.datasets[0].data = ctr;
+    ctrChart.update();
+
+    cpmChart.data.labels = labels;
+    cpmChart.data.datasets[0].data = cpm;
+    cpmChart.update();
+
+    // Update KPIs
+    const totalSpend = spend.reduce((a,b) => a+b, 0);
+    const totalLeads = leads.reduce((a,b) => a+b, 0);
+    const totalImpressions = impressions.reduce((a,b) => a+b, 0);
+    const totalClicks = clicks.reduce((a,b) => a+b, 0);
+    const totalReach = reach.reduce((a,b) => a+b, 0);
+    const avgCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
+    const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
+    const avgCPM = totalImpressions > 0 ? (totalSpend / totalImpressions * 1000) : 0;
+    const numDays = indices.length;
+
+    document.getElementById('kpi-spend').textContent = fmtCOPFull(totalSpend);
+    document.getElementById('kpi-spend-sub').textContent = `COP (${{numDays}} dias)`;
+    document.getElementById('kpi-leads').textContent = totalLeads.toLocaleString('es-CO');
+    document.getElementById('kpi-cpl').textContent = fmtCOPFull(avgCPL);
+    document.getElementById('kpi-impressions').textContent = totalImpressions.toLocaleString('es-CO');
+    document.getElementById('kpi-cpm-sub').textContent = 'CPM: ' + fmtCOPFull(avgCPM);
+    document.getElementById('kpi-ctr').textContent = avgCTR.toFixed(2) + '%';
+    document.getElementById('kpi-clicks-sub').textContent = totalClicks.toLocaleString('es-CO') + ' clics totales';
+    document.getElementById('kpi-reach').textContent = totalReach.toLocaleString('es-CO');
+
+    // Update date range display
+    document.getElementById('dateRangeDisplay').textContent = fmtDateES(fromDate) + ' \u2014 ' + fmtDateES(toDate);
+
+    // Regenerate AI analysis with new range
+    if (typeof generateAnalysis === 'function') generateAnalysis();
+}}
+
+// Attach date picker events
+document.getElementById('dateFrom').addEventListener('change', filterByDateRange);
+document.getElementById('dateTo').addEventListener('change', filterByDateRange);
+
+// ── SOURCE FILTER ──────────────────────────────────────
+let currentSource = 'ambos';
+
+function filterSource(source) {{
+    currentSource = source;
+    // Update button states
+    document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.source-btn[data-source="${{source}}"]`).classList.add('active');
+
+    const metaSections = document.querySelectorAll('.section-source-meta');
+    const sheetSections = document.querySelectorAll('.section-source-sheet');
+    const ventasSections = document.querySelectorAll('.section-source-ventas');
+
+    if (source === 'meta') {{
+        metaSections.forEach(s => s.classList.remove('section-hidden'));
+        ventasSections.forEach(s => s.classList.remove('section-hidden'));
+        sheetSections.forEach(s => s.classList.add('section-hidden'));
+    }} else if (source === 'sheet') {{
+        metaSections.forEach(s => s.classList.add('section-hidden'));
+        ventasSections.forEach(s => s.classList.add('section-hidden'));
+        sheetSections.forEach(s => s.classList.remove('section-hidden'));
+    }} else {{
+        // ambos
+        metaSections.forEach(s => s.classList.remove('section-hidden'));
+        ventasSections.forEach(s => s.classList.remove('section-hidden'));
+        sheetSections.forEach(s => s.classList.remove('section-hidden'));
+    }}
+}}
+
+function filterVentas(mes) {{
+    currentMes = mes;
+    // Update button states
+    document.querySelectorAll('.filter-ventas').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.filter-ventas[data-mes="${{mes}}"]`).classList.add('active');
+
+    const filtered = mes === 'ALL' ? ALL_VENTAS : ALL_VENTAS.filter(v => v.mes === mes);
+    const metaFiltered = filtered.filter(v => v.fuente === 'META');
+
+    // Recalculate ventas KPIs
+    const totalCount = filtered.length;
+    const totalRevenue = filtered.reduce((a,v) => a + v.precio, 0);
+    const metaCount = metaFiltered.length;
+    const metaRevenue = metaFiltered.reduce((a,v) => a + v.precio, 0);
+    const metaTicket = metaCount > 0 ? metaRevenue / metaCount : 0;
+    const metaDias = metaFiltered.filter(v => v.dias_cierre !== null).map(v => v.dias_cierre);
+    const medianDias = metaDias.length > 0 ? metaDias.sort((a,b)=>a-b)[Math.floor(metaDias.length/2)] : 0;
+    const avgDias = metaDias.length > 0 ? metaDias.reduce((a,b)=>a+b,0)/metaDias.length : 0;
+
+    // Get current ads spend for ROAS calc
+    const spendText = document.getElementById('kpi-spend').textContent;
+    const currentSpend = parseFloat(spendText.replace(/[$.,]/g,'')) || {total_spend};
+    const roas = currentSpend > 0 ? metaRevenue / currentSpend : 0;
+    const cpv = metaCount > 0 ? currentSpend / metaCount : 0;
+
+    document.getElementById('kpi-roas').textContent = roas.toFixed(1) + 'x';
+    document.getElementById('kpi-meta-revenue').textContent = fmtCOPFull(metaRevenue);
+    document.getElementById('kpi-meta-revenue-sub').textContent = metaCount + ' lotes vendidos via Meta';
+    document.getElementById('kpi-total-revenue').textContent = fmtCOPFull(totalRevenue);
+    document.getElementById('kpi-total-revenue-sub').textContent = totalCount + ' ventas todas las fuentes';
+    document.getElementById('kpi-ticket').textContent = metaTicket > 0 ? fmtCOPFull(metaTicket) : '$0';
+    document.getElementById('kpi-dias').textContent = medianDias + ' dias';
+    document.getElementById('kpi-dias-sub').textContent = 'Mediana (' + avgDias.toFixed(1) + ' promedio)';
+    document.getElementById('kpi-cpv').textContent = metaCount > 0 ? fmtCOPFull(cpv) : '$0';
+
+    // Update source chart
+    const bySource = {{}};
+    filtered.forEach(v => {{
+        if (!v.fuente) return;
+        if (!bySource[v.fuente]) bySource[v.fuente] = {{count:0, revenue:0}};
+        bySource[v.fuente].count++;
+        bySource[v.fuente].revenue += v.precio;
+    }});
+    const srcEntries = Object.entries(bySource).sort((a,b) => b[1].revenue - a[1].revenue);
+    const srcChart = Chart.getChart('sourceChart');
+    if (srcChart) {{
+        srcChart.data.labels = srcEntries.map(e => e[0]);
+        srcChart.data.datasets[0].data = srcEntries.map(e => e[1].count);
+        srcChart.data.datasets[1].data = srcEntries.map(e => e[1].revenue);
+        srcChart.update();
+    }}
+
+    // Update source attribution table
+    const sourceTableBody = document.querySelector('.section:has(#sourceChart) + .section tbody');
+    if (sourceTableBody) {{
+        let html = '';
+        srcEntries.forEach(([src, data]) => {{
+            const pctCount = totalCount > 0 ? (data.count/totalCount*100).toFixed(1) : '0.0';
+            const pctRev = totalRevenue > 0 ? (data.revenue/totalRevenue*100).toFixed(1) : '0.0';
+            const revD = data.revenue > 0 ? fmtCOPFull(data.revenue) : '<span style="color:var(--text-muted);font-size:11px">Sin dato</span>';
+            const color = src === 'META' ? '#4361ee' : '#8892b0';
+            html += `<tr><td style="font-weight:600;color:${{color}}">${{src}}</td><td class="num">${{data.count}}</td><td class="num">${{pctCount}}%</td><td class="num">${{revD}}</td><td class="num">${{pctRev}}%</td></tr>`;
+        }});
+        sourceTableBody.innerHTML = html;
+    }}
+}}
+
+// ══════════════════════════════════════════════════════════
+// AI ANALYSIS — Dynamic generation on each load / filter
+// ══════════════════════════════════════════════════════════
+const ANALYSIS_DATA = {analysis_js_data};
+
+function hl(text) {{ return '<span class="analysis-highlight">' + text + '</span>'; }}
+function analysisItem(text) {{
+    return '<div class="analysis-item"><span class="analysis-bullet"></span><span>' + text + '</span></div>';
+}}
+
+function generateAnalysis() {{
+    // Get current filtered date range
+    const fromDate = document.getElementById('dateFrom').value;
+    const toDate = document.getElementById('dateTo').value;
+    const indices = [];
+    ALL_DATES.forEach((d, i) => {{ if (d >= fromDate && d <= toDate) indices.push(i); }});
+    if (indices.length === 0) return;
+
+    const spend = indices.map(i => ALL_SPEND[i]);
+    const leads = indices.map(i => ALL_LEADS[i]);
+    const cpl = indices.map(i => ALL_CPL[i]);
+    const ctr = indices.map(i => ALL_CTR[i]);
+    const cpm = indices.map(i => ALL_CPM[i]);
+    const impressions = indices.map(i => ALL_IMPRESSIONS[i]);
+    const clicks = indices.map(i => ALL_CLICKS[i]);
+    const numDays = indices.length;
+
+    const totalSpend = spend.reduce((a,b) => a+b, 0);
+    const totalLeads = leads.reduce((a,b) => a+b, 0);
+    const totalImpressions = impressions.reduce((a,b) => a+b, 0);
+    const totalClicks = clicks.reduce((a,b) => a+b, 0);
+    const avgCPL = totalLeads > 0 ? totalSpend / totalLeads : 0;
+    const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions * 100) : 0;
+    const cplUSD = avgCPL / 4400;
+
+    // Week-over-week
+    const last7 = spend.slice(-7);
+    const prev7 = spend.slice(-14, -7);
+    const last7leads = leads.slice(-7);
+    const last7cpl = cpl.slice(-7).filter(v => v > 0);
+    const prev7cpl = cpl.slice(-14, -7).filter(v => v > 0);
+    const avgWeek2CPL = last7cpl.length > 0 ? last7cpl.reduce((a,b)=>a+b,0)/last7cpl.length : 0;
+    const avgWeek1CPL = prev7cpl.length > 0 ? prev7cpl.reduce((a,b)=>a+b,0)/prev7cpl.length : 0;
+
+    // CPM trend
+    const first7cpm = cpm.slice(0, 7);
+    const last7cpm = cpm.slice(-7);
+    const avgFirst7CPM = first7cpm.length > 0 ? first7cpm.reduce((a,b)=>a+b,0)/first7cpm.length : 0;
+    const avgLast7CPM = last7cpm.length > 0 ? last7cpm.reduce((a,b)=>a+b,0)/last7cpm.length : 0;
+    const cpmChangePct = avgFirst7CPM > 0 ? ((avgLast7CPM - avgFirst7CPM) / avgFirst7CPM * 100) : 0;
+
+    // Static data from Python
+    const D = ANALYSIS_DATA;
+    const activeCamps = D.activeCampaigns;
+    const metaVentasCount = D.metaVentasCount;
+    const metaVentasRevenue = D.metaVentasRevenue;
+    const roas = totalSpend > 0 ? metaVentasRevenue / totalSpend : 0;
+    const convRate = totalLeads > 0 ? (metaVentasCount / totalLeads * 100) : 0;
+
+    // Frequency from campaign data
+    const freqs = D.activeCampsData.map(c => c.frequency).filter(f => f > 0);
+    const avgFreq = freqs.length > 0 ? freqs.reduce((a,b)=>a+b,0)/freqs.length : 0;
+
+    // Best ROAS campaigns
+    const bestRoas = D.campaignRoas.filter(c => c.roas > 0).sort((a,b) => b.roas - a.roas);
+    const zeroVentasHighSpend = D.campaignRoas.filter(c => c.ventas === 0 && c.spend > totalSpend * 0.05)
+        .sort((a,b) => b.spend - a.spend);
+
+    // ─── BUILD ITEMS ─────────────────────────────
+    const pos = [], warn = [], rec = [];
+
+    // === LO POSITIVO ===
+    pos.push(hl(totalLeads.toLocaleString('es-CO') + ' leads') + ' en ' + numDays + ' dias con CPL de ' +
+        hl(fmtCOPFull(avgCPL) + ' COP') + ' (~$' + cplUSD.toFixed(2) + ' USD) &mdash; altamente eficiente para real estate');
+
+    if (avgCTR > 2.0) {{
+        pos.push(hl('CTR del ' + avgCTR.toFixed(2) + '%') + ' &mdash; excelente, ' +
+            (avgCTR/1.2).toFixed(1) + 'x el promedio del sector inmobiliario (0.9%-1.5%)');
+    }} else if (avgCTR > 1.0) {{
+        pos.push(hl('CTR del ' + avgCTR.toFixed(2) + '%') + ' &mdash; por encima del promedio del sector real estate (0.9%-1.5%)');
+    }}
+
+    if (roas > 1) {{
+        pos.push('ROAS de ' + hl(roas.toFixed(1) + 'x') + ' &mdash; por cada $1 invertido se recuperan $' +
+            roas.toFixed(1) + ' en ventas reales. Revenue META: ' + hl(fmtCOPFull(metaVentasRevenue)));
+    }}
+
+    if (D.topPerformers.length > 0) {{
+        const best = D.topPerformers[0];
+        pos.push('Campana mas eficiente: ' + hl(best.name) + ' con CPL de ' + hl(fmtCOPFull(best.cpl)) + ' y ' + best.leads + ' leads');
+    }}
+
+    if (D.totalEngagement > 50000) {{
+        pos.push(hl(D.totalEngagement.toLocaleString('es-CO') + ' interacciones') + ', ' +
+            hl(D.totalVideoViews.toLocaleString('es-CO') + ' reproducciones') + ' y ' +
+            D.totalMessaging.toLocaleString('es-CO') + ' conexiones de mensajeria &mdash; fuerte presencia de marca');
+    }}
+
+    if (avgWeek1CPL > 0 && avgWeek2CPL > 0 && avgWeek2CPL < avgWeek1CPL) {{
+        const cplImprove = (1 - avgWeek2CPL / avgWeek1CPL) * 100;
+        pos.push('CPL mejorando: ' + hl('-' + cplImprove.toFixed(0) + '%') + ' ultima semana (' +
+            fmtCOPFull(avgWeek2CPL) + ') vs anterior (' + fmtCOPFull(avgWeek1CPL) + ')');
+    }}
+
+    if (D.fastClosers > 0 && D.totalDiasCount > 0) {{
+        const pctFast = D.fastClosers / D.totalDiasCount * 100;
+        if (pctFast > 20) {{
+            pos.push(hl(pctFast.toFixed(0) + '% de ventas META') + ' cierran en 7 dias o menos &mdash; el equipo comercial actua rapido');
+        }}
+    }}
+
+    if (convRate > 1) {{
+        pos.push('Tasa lead&rarr;venta: ' + hl(convRate.toFixed(1) + '%') + ' (' + metaVentasCount + ' ventas de ' + totalLeads.toLocaleString('es-CO') + ' leads)');
+    }}
+
+    // === A VIGILAR ===
+    if (activeCamps > 10) {{
+        warn.push(hl(activeCamps + ' campanas activas') + ' &mdash; alto riesgo de ' + hl('Auction Overlap') +
+            ': tus propios anuncios compiten entre si encareciendo la subasta');
+    }} else if (activeCamps > 6) {{
+        warn.push(hl(activeCamps + ' campanas activas') + ' &mdash; monitorear posible Auction Overlap entre campanas similares');
+    }}
+
+    if (avgFreq > 2.5) {{
+        const fatigueMsg = avgFreq > 3.0 ? 'EN ZONA DE FATIGA' : 'acercandose al limite';
+        warn.push('Frecuencia promedio de ' + hl(avgFreq.toFixed(2)) + ' &mdash; ' + fatigueMsg +
+            '. Los usuarios ven los anuncios demasiadas veces, el CPM sube y la conversion baja');
+    }}
+
+    if (cpmChangePct > 20) {{
+        warn.push('CPM subiendo: de ' + hl(fmtCOPFull(avgFirst7CPM)) + ' a ' + hl(fmtCOPFull(avgLast7CPM)) +
+            ' (+' + cpmChangePct.toFixed(0) + '%) &mdash; los leads se encarecen progresivamente');
+    }}
+
+    if (avgWeek1CPL > 0 && avgWeek2CPL > avgWeek1CPL) {{
+        const cplChange = (avgWeek2CPL - avgWeek1CPL) / avgWeek1CPL * 100;
+        if (cplChange > 15) {{
+            warn.push('CPL subiendo semana a semana: ' + hl(fmtCOPFull(avgWeek1CPL)) + ' &rarr; ' +
+                hl(fmtCOPFull(avgWeek2CPL)) + ' (+' + cplChange.toFixed(0) + '%) &mdash; revisar creativos y segmentacion');
+        }}
+    }}
+
+    if (D.bottomPerformers.length > 0) {{
+        const worst = D.bottomPerformers[0];
+        if (worst.cpl > avgCPL * 2) {{
+            warn.push(hl(worst.name) + ' tiene CPL de ' + fmtCOPFull(worst.cpl) + ' (' + worst.leads + ' leads) &mdash; ' +
+                (worst.cpl/avgCPL).toFixed(1) + 'x el promedio. Considerar pausarla');
+        }}
+    }}
+
+    if (zeroVentasHighSpend.length > 0) {{
+        const wasted = zeroVentasHighSpend.reduce((a,c) => a+c.spend, 0);
+        const names = zeroVentasHighSpend.slice(0,3).map(c => c.name.substring(0,20)).join(', ');
+        warn.push(hl(fmtCOPFull(wasted)) + ' invertidos en campanas sin ventas reales: ' + hl(names));
+    }}
+
+    if (D.ventasSinPrecio > 0) {{
+        warn.push(hl(D.ventasSinPrecio + ' ventas META') + ' sin precio en Google Sheet &mdash; el ROAS real podria ser mayor al reportado (' + roas.toFixed(1) + 'x)');
+    }}
+
+    if (D.eneMeta > 0 && D.febMeta > 0) {{
+        const metaChange = ((D.febMeta - D.eneMeta) / D.eneMeta) * 100;
+        if (metaChange < -20) {{
+            warn.push('Ventas META cayeron ' + hl(Math.abs(metaChange).toFixed(0) + '%') +
+                ' de Enero (' + D.eneMeta + ') a Febrero (' + D.febMeta + ') &mdash; Febrero aun no cierra pero la tendencia es preocupante');
+        }}
+    }}
+
+    if (D.slowClosers > 0 && D.totalDiasCount > 0) {{
+        const pctSlow = D.slowClosers / D.totalDiasCount * 100;
+        if (pctSlow > 15) {{
+            warn.push(hl(pctSlow.toFixed(0) + '%') + ' de las ventas META tardan mas de 30 dias en cerrar &mdash; posible problema de seguimiento comercial');
+        }}
+    }}
+
+    // === RECOMENDACIONES ===
+    if (activeCamps > 8) {{
+        rec.push(hl('Consolidar campanas:') + ' Reducir de ' + activeCamps + ' a 4-5 activas. Esto elimina Auction Overlap, concentra presupuesto y acelera la fase de aprendizaje del algoritmo');
+    }}
+
+    if (bestRoas.length > 0) {{
+        const br = bestRoas[0];
+        rec.push(hl('Escalar ' + br.name.substring(0,25) + ':') + ' ROAS de ' + br.roas.toFixed(1) + 'x con ' + br.ventas + ' ventas reales. Aumentar presupuesto 20-30% semanal sin salir de learning phase');
+    }}
+
+    if (D.topPerformers.length > 0) {{
+        rec.push(hl('Priorizar campanas eficientes:') + ' Las de CPL bajo (' + fmtCOPFull(D.topPerformers[0].cpl) + ') deben recibir mas presupuesto antes de lanzar nuevas pruebas');
+    }}
+
+    if (cpmChangePct > 15 || avgFreq > 2.5) {{
+        rec.push(hl('Rotar creativos cada 2-3 semanas:') + ' ' +
+            (cpmChangePct > 15 ? 'CPM +' + cpmChangePct.toFixed(0) + '% y ' : '') +
+            'frecuencia de ' + avgFreq.toFixed(1) + ' indican fatiga. Probar nuevos angulos: testimonios, recorridos, comparativos de precio');
+    }}
+
+    if (avgCPL > 4000) {{
+        rec.push(hl('Implementar bid cap:') + ' Con CPL promedio de ' + fmtCOPFull(avgCPL) + ', un bid cap de ' +
+            fmtCOPFull(avgCPL * 1.2) + ' controlaria el maximo sin perder volumen significativo');
+    }}
+
+    if (zeroVentasHighSpend.length > 0) {{
+        const names = zeroVentasHighSpend.slice(0,2).map(c => c.name.substring(0,20)).join(', ');
+        rec.push(hl('Pausar campanas sin conversion:') + ' ' + names + ' gastan sin generar ventas reales. Redirigir presupuesto a ganadoras');
+    }}
+
+    if (D.ventasSinPrecio > 0) {{
+        rec.push(hl('Completar precios en Sheet:') + ' ' + D.ventasSinPrecio + ' ventas META sin precio registrado. Esto subestima el ROAS real y dificulta decisiones de presupuesto');
+    }}
+
+    if (D.topAsesor) {{
+        rec.push(hl('Replicar proceso de ' + D.topAsesor.name + ':') + ' ' + D.topAsesor.count + ' ventas META cerradas &mdash; documentar su proceso de seguimiento y capacitar al resto del equipo comercial');
+    }}
+
+    if (D.topCreative) {{
+        rec.push(hl('Amplificar creativo "' + D.topCreative.name + '":') + ' ' + D.topCreative.count + ' ventas cerradas. Crear variaciones de este anuncio para escalar sin fatiga');
+    }}
+
+    // ─── RENDER ──────────────────────────
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const timestamp = pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+
+    document.getElementById('analysisTimestamp').innerHTML =
+        'Generado automaticamente cruzando datos de Meta Ads + Google Sheet Ventas | Rango: ' +
+        fmtDateES(fromDate) + ' &mdash; ' + fmtDateES(toDate) + ' | ' + timestamp;
+
+    const buildCard = (cls, icon, title, items) => {{
+        let html = '<div class="analysis-card ' + cls + '"><div class="analysis-card-header"><span class="analysis-icon">' + icon + '</span><h3>' + title + '</h3></div>';
+        items.slice(0,6).forEach(t => {{ html += analysisItem(t); }});
+        html += '</div>';
+        return html;
+    }};
+
+    document.getElementById('analysisGrid').innerHTML =
+        buildCard('positive', '&#9989;', 'Lo Positivo', pos) +
+        buildCard('warning', '&#9888;&#65039;', 'A Vigilar', warn) +
+        buildCard('recommend', '&#128161;', 'Recomendaciones', rec);
+}}
+
+// Generate on page load
+generateAnalysis();
+
 </script>
 </body>
 </html>"""
