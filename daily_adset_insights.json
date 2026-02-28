@@ -30313,12 +30313,12 @@
       "campaign_name": "24/02/26_CP_BESTSELLER_FORMVERIF",
       "adset_id": "120240738490890101",
       "adset_name": "SEGMENTADO",
-      "impressions": "846",
+      "impressions": "847",
       "clicks": "23",
-      "spend": "10180",
-      "cpm": "12033.096927",
-      "ctr": "2.718676",
-      "reach": "791",
+      "spend": "10196",
+      "cpm": "12037.780401",
+      "ctr": "2.715466",
+      "reach": "792",
       "actions": [
         {
           "action_type": "offsite_complete_registration_add_meta_leads",
@@ -30392,12 +30392,12 @@
       "campaign_name": "26/03/25 FORM META PRUEBAS",
       "adset_id": "120220341636410101",
       "adset_name": "ABIERTO CTG FORM SIMPLE",
-      "impressions": "2720",
+      "impressions": "2724",
       "clicks": "42",
-      "spend": "22442",
-      "cpm": "8250.735294",
-      "ctr": "1.544118",
-      "reach": "2537",
+      "spend": "22451",
+      "cpm": "8241.923642",
+      "ctr": "1.54185",
+      "reach": "2539",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -30483,11 +30483,11 @@
       "campaign_name": "07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM",
       "adset_id": "120233919033350101",
       "adset_name": "ABIERTO",
-      "impressions": "3567",
-      "clicks": "189",
-      "spend": "53811",
-      "cpm": "15085.786375",
-      "ctr": "5.29857",
+      "impressions": "3569",
+      "clicks": "190",
+      "spend": "53825",
+      "cpm": "15081.255254",
+      "ctr": "5.32362",
       "reach": "3250",
       "actions": [
         {
@@ -30496,11 +30496,11 @@
         },
         {
           "action_type": "link_click",
-          "value": "113"
+          "value": "114"
         },
         {
           "action_type": "page_engagement",
-          "value": "1535"
+          "value": "1538"
         },
         {
           "action_type": "landing_page_view",
@@ -30512,7 +30512,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "1534"
+          "value": "1537"
         },
         {
           "action_type": "like",
@@ -30544,7 +30544,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "1402"
+          "value": "1404"
         },
         {
           "action_type": "post_reaction",
@@ -30558,11 +30558,11 @@
       "campaign_name": "20/10/25_CP_EVENTO26OCT_FORM",
       "adset_id": "120234798521420101",
       "adset_name": "ABIERTO",
-      "impressions": "7283",
+      "impressions": "7285",
       "clicks": "113",
-      "spend": "48209",
-      "cpm": "6619.387615",
-      "ctr": "1.551558",
+      "spend": "48217",
+      "cpm": "6618.668497",
+      "ctr": "1.551132",
       "reach": "6863",
       "actions": [
         {
@@ -30575,7 +30575,7 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "1391"
+          "value": "1392"
         },
         {
           "action_type": "landing_page_view",
@@ -30587,7 +30587,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "1390"
+          "value": "1391"
         },
         {
           "action_type": "like",
@@ -30631,7 +30631,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "1316"
+          "value": "1317"
         },
         {
           "action_type": "post_reaction",
@@ -30645,11 +30645,11 @@
       "campaign_name": "29/10/25_GENERALOCT_FORM",
       "adset_id": "120235404008410101",
       "adset_name": "ABIERTO",
-      "impressions": "2217",
+      "impressions": "2218",
       "clicks": "27",
-      "spend": "22464",
-      "cpm": "10132.611637",
-      "ctr": "1.217862",
+      "spend": "22468",
+      "cpm": "10129.846709",
+      "ctr": "1.217313",
       "reach": "1956",
       "actions": [
         {
@@ -30704,12 +30704,12 @@
       "campaign_name": "31/10/25_RECON_MENSAJESIG",
       "adset_id": "120235534280500101",
       "adset_name": "ABIERTO",
-      "impressions": "11388",
-      "clicks": "110",
-      "spend": "9883",
-      "cpm": "867.843344",
-      "ctr": "0.965929",
-      "reach": "11375",
+      "impressions": "11408",
+      "clicks": "112",
+      "spend": "9900",
+      "cpm": "867.812062",
+      "ctr": "0.981767",
+      "reach": "11393",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -30729,11 +30729,11 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "1466"
+          "value": "1467"
         },
         {
           "action_type": "post_engagement",
-          "value": "1466"
+          "value": "1467"
         },
         {
           "action_type": "post_interaction_gross",
@@ -30773,7 +30773,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "1459"
+          "value": "1460"
         },
         {
           "action_type": "post_reaction",
@@ -30850,12 +30850,12 @@
       "campaign_name": "18/11/25_CP_PRUEBACA_FORM",
       "adset_id": "120236564998860101",
       "adset_name": "ABIERTO V1",
-      "impressions": "3714",
+      "impressions": "3718",
       "clicks": "183",
-      "spend": "84177",
-      "cpm": "22664.781906",
-      "ctr": "4.927302",
-      "reach": "3108",
+      "spend": "84209",
+      "cpm": "22649.004841",
+      "ctr": "4.922001",
+      "reach": "3110",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -30941,20 +30941,20 @@
       "campaign_name": "22/11/25_TRAFGRAL_WEB",
       "adset_id": "120236829248630101",
       "adset_name": "SEMI ABIERTO",
-      "impressions": "2374",
-      "clicks": "470",
-      "spend": "10453",
-      "cpm": "4403.117102",
-      "ctr": "19.79781",
+      "impressions": "2377",
+      "clicks": "471",
+      "spend": "10467",
+      "cpm": "4403.449727",
+      "ctr": "19.814893",
       "reach": "2314",
       "actions": [
         {
           "action_type": "link_click",
-          "value": "379"
+          "value": "380"
         },
         {
           "action_type": "page_engagement",
-          "value": "859"
+          "value": "862"
         },
         {
           "action_type": "landing_page_view",
@@ -30966,7 +30966,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "859"
+          "value": "862"
         },
         {
           "action_type": "post_interaction_gross",
@@ -30978,7 +30978,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "478"
+          "value": "480"
         },
         {
           "action_type": "post_reaction",
@@ -30992,12 +30992,12 @@
       "campaign_name": "14/01/26_CP_VIDEOSENE_FORM",
       "adset_id": "120239224521940101",
       "adset_name": "SEGMENTADO",
-      "impressions": "670",
+      "impressions": "672",
       "clicks": "11",
-      "spend": "8477",
-      "cpm": "12652.238806",
-      "ctr": "1.641791",
-      "reach": "625",
+      "spend": "8557",
+      "cpm": "12733.630952",
+      "ctr": "1.636905",
+      "reach": "627",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -31013,7 +31013,7 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "123"
+          "value": "124"
         },
         {
           "action_type": "landing_page_view",
@@ -31025,7 +31025,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "123"
+          "value": "124"
         },
         {
           "action_type": "post_interaction_gross",
@@ -31065,7 +31065,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "115"
+          "value": "116"
         }
       ],
       "date_start": "2026-02-26",
@@ -31075,12 +31075,12 @@
       "campaign_name": "04/02/26_CP_VIDEOSESTRATEGY_FORM",
       "adset_id": "120240025852200101",
       "adset_name": "SEGMENTADO",
-      "impressions": "1585",
+      "impressions": "1586",
       "clicks": "49",
-      "spend": "11304",
-      "cpm": "7131.861199",
-      "ctr": "3.091483",
-      "reach": "1520",
+      "spend": "11305",
+      "cpm": "7127.994956",
+      "ctr": "3.089533",
+      "reach": "1522",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -31096,7 +31096,7 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "682"
+          "value": "684"
         },
         {
           "action_type": "landing_page_view",
@@ -31108,7 +31108,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "682"
+          "value": "684"
         },
         {
           "action_type": "post_interaction_gross",
@@ -31152,7 +31152,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "647"
+          "value": "649"
         },
         {
           "action_type": "post_reaction",
@@ -31166,11 +31166,11 @@
       "campaign_name": "04/02/26_CP_VIDEOSESTRATEGY_FORM",
       "adset_id": "120240032379790101",
       "adset_name": "ABIERTO",
-      "impressions": "1203",
+      "impressions": "1204",
       "clicks": "49",
-      "spend": "8273",
-      "cpm": "6876.974231",
-      "ctr": "4.07315",
+      "spend": "8447",
+      "cpm": "7015.780731",
+      "ctr": "4.069767",
       "reach": "1180",
       "actions": [
         {
@@ -31286,12 +31286,12 @@
       "campaign_name": "08/02/26_CP_VIDEOS_FORM PREG",
       "adset_id": "120240172544360101",
       "adset_name": "SEGMENTADO",
-      "impressions": "1225",
+      "impressions": "1226",
       "clicks": "38",
-      "spend": "10725",
-      "cpm": "8755.102041",
-      "ctr": "3.102041",
-      "reach": "1157",
+      "spend": "10728",
+      "cpm": "8750.40783",
+      "ctr": "3.099511",
+      "reach": "1159",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -31307,7 +31307,7 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "463"
+          "value": "465"
         },
         {
           "action_type": "landing_page_view",
@@ -31319,7 +31319,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "461"
+          "value": "463"
         },
         {
           "action_type": "like",
@@ -31375,7 +31375,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "434"
+          "value": "436"
         },
         {
           "action_type": "post_reaction",
@@ -31389,12 +31389,12 @@
       "campaign_name": "13/02/26_CP_2PREGU_FORM",
       "adset_id": "120240328798710101",
       "adset_name": "SEGMENTADO",
-      "impressions": "1334",
+      "impressions": "1336",
       "clicks": "28",
-      "spend": "10038",
-      "cpm": "7524.737631",
-      "ctr": "2.098951",
-      "reach": "1290",
+      "spend": "10042",
+      "cpm": "7516.467066",
+      "ctr": "2.095808",
+      "reach": "1292",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -31464,12 +31464,12 @@
       "campaign_name": "24/02/26_CP_1CA1A_FORM",
       "adset_id": "120240737830100101",
       "adset_name": "ABIERTO",
-      "impressions": "2077",
+      "impressions": "2078",
       "clicks": "43",
-      "spend": "9330",
-      "cpm": "4492.05585",
-      "ctr": "2.070294",
-      "reach": "1911",
+      "spend": "9339",
+      "cpm": "4494.225217",
+      "ctr": "2.069297",
+      "reach": "1914",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -31485,7 +31485,7 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "436"
+          "value": "437"
         },
         {
           "action_type": "landing_page_view",
@@ -31497,7 +31497,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "436"
+          "value": "437"
         },
         {
           "action_type": "post_interaction_gross",
@@ -31533,7 +31533,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "405"
+          "value": "406"
         },
         {
           "action_type": "post_reaction",
@@ -31547,12 +31547,12 @@
       "campaign_name": "24/02/26_CP_1CA1A_FORM",
       "adset_id": "120240737964920101",
       "adset_name": "ABIERTO",
-      "impressions": "619",
+      "impressions": "621",
       "clicks": "7",
-      "spend": "6665",
-      "cpm": "10767.366721",
-      "ctr": "1.130856",
-      "reach": "595",
+      "spend": "6668",
+      "cpm": "10737.520129",
+      "ctr": "1.127214",
+      "reach": "596",
       "actions": [
         {
           "action_type": "link_click",
@@ -31560,11 +31560,11 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "154"
+          "value": "155"
         },
         {
           "action_type": "post_engagement",
-          "value": "154"
+          "value": "155"
         },
         {
           "action_type": "post_interaction_gross",
@@ -31576,7 +31576,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "150"
+          "value": "151"
         },
         {
           "action_type": "post_reaction",
@@ -31862,28 +31862,28 @@
       "campaign_name": "26/03/25 FORM META PRUEBAS",
       "adset_id": "120220341636410101",
       "adset_name": "ABIERTO CTG FORM SIMPLE",
-      "impressions": "1328",
-      "clicks": "32",
-      "spend": "10895",
-      "cpm": "8204.066265",
-      "ctr": "2.409639",
-      "reach": "1194",
+      "impressions": "1942",
+      "clicks": "43",
+      "spend": "16799",
+      "cpm": "8650.360453",
+      "ctr": "2.214212",
+      "reach": "1749",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
-          "value": "1"
+          "value": "4"
         },
         {
           "action_type": "offsite_complete_registration_add_meta_leads",
-          "value": "1"
+          "value": "3"
         },
         {
           "action_type": "link_click",
-          "value": "9"
+          "value": "14"
         },
         {
           "action_type": "page_engagement",
-          "value": "338"
+          "value": "502"
         },
         {
           "action_type": "onsite_conversion.post_unlike",
@@ -31891,7 +31891,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "338"
+          "value": "502"
         },
         {
           "action_type": "comment",
@@ -31899,10 +31899,14 @@
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "11"
+          "value": "19"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
+          "value": "3"
+        },
+        {
+          "action_type": "post",
           "value": "1"
         },
         {
@@ -31911,7 +31915,7 @@
         },
         {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "6"
+          "value": "13"
         },
         {
           "action_type": "onsite_conversion.post_net_save",
@@ -31919,31 +31923,31 @@
         },
         {
           "action_type": "onsite_conversion.messaging_first_reply",
-          "value": "1"
+          "value": "4"
         },
         {
           "action_type": "lead",
-          "value": "1"
+          "value": "3"
         },
         {
           "action_type": "offsite_content_view_add_meta_leads",
-          "value": "1"
+          "value": "3"
         },
         {
           "action_type": "onsite_conversion.messaging_conversation_started_7d",
-          "value": "1"
+          "value": "4"
         },
         {
           "action_type": "onsite_conversion.lead_grouped",
-          "value": "1"
+          "value": "3"
         },
         {
           "action_type": "video_view",
-          "value": "318"
+          "value": "469"
         },
         {
           "action_type": "post_reaction",
-          "value": "7"
+          "value": "14"
         }
       ],
       "date_start": "2026-02-27",
@@ -31953,24 +31957,24 @@
       "campaign_name": "07/10/2025_CP_VIDEOSGRAL_ALMUERZO_FORM",
       "adset_id": "120233919033350101",
       "adset_name": "ABIERTO",
-      "impressions": "2109",
-      "clicks": "108",
-      "spend": "31925",
-      "cpm": "15137.505927",
-      "ctr": "5.12091",
-      "reach": "2038",
+      "impressions": "2804",
+      "clicks": "152",
+      "spend": "41484",
+      "cpm": "14794.579173",
+      "ctr": "5.420827",
+      "reach": "2603",
       "actions": [
         {
           "action_type": "offsite_complete_registration_add_meta_leads",
-          "value": "5"
+          "value": "7"
         },
         {
           "action_type": "link_click",
-          "value": "56"
+          "value": "82"
         },
         {
           "action_type": "page_engagement",
-          "value": "809"
+          "value": "1097"
         },
         {
           "action_type": "landing_page_view",
@@ -31986,7 +31990,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "808"
+          "value": "1096"
         },
         {
           "action_type": "comment",
@@ -31998,39 +32002,47 @@
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "12"
+          "value": "15"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
-          "value": "5"
+          "value": "7"
         },
         {
           "action_type": "post",
           "value": "1"
         },
         {
+          "action_type": "onsite_conversion.post_save",
+          "value": "1"
+        },
+        {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "9"
+          "value": "11"
+        },
+        {
+          "action_type": "onsite_conversion.post_net_save",
+          "value": "1"
         },
         {
           "action_type": "lead",
-          "value": "5"
+          "value": "7"
         },
         {
           "action_type": "offsite_content_view_add_meta_leads",
-          "value": "5"
+          "value": "7"
         },
         {
           "action_type": "onsite_conversion.lead_grouped",
-          "value": "5"
+          "value": "7"
         },
         {
           "action_type": "video_view",
-          "value": "740"
+          "value": "999"
         },
         {
           "action_type": "post_reaction",
-          "value": "10"
+          "value": "12"
         }
       ],
       "date_start": "2026-02-27",
@@ -32040,24 +32052,28 @@
       "campaign_name": "20/10/25_CP_EVENTO26OCT_FORM",
       "adset_id": "120234798521420101",
       "adset_name": "ABIERTO",
-      "impressions": "3866",
-      "clicks": "43",
-      "spend": "26689",
-      "cpm": "6903.517848",
-      "ctr": "1.112261",
-      "reach": "3604",
+      "impressions": "5104",
+      "clicks": "62",
+      "spend": "36012",
+      "cpm": "7055.642633",
+      "ctr": "1.214734",
+      "reach": "4752",
       "actions": [
         {
+          "action_type": "offsite_complete_registration_add_meta_leads",
+          "value": "1"
+        },
+        {
           "action_type": "link_click",
-          "value": "19"
+          "value": "26"
         },
         {
           "action_type": "page_engagement",
-          "value": "678"
+          "value": "907"
         },
         {
           "action_type": "post_engagement",
-          "value": "678"
+          "value": "907"
         },
         {
           "action_type": "comment",
@@ -32065,7 +32081,11 @@
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "16"
+          "value": "20"
+        },
+        {
+          "action_type": "offsite_search_add_meta_leads",
+          "value": "1"
         },
         {
           "action_type": "onsite_conversion.post_save",
@@ -32073,19 +32093,31 @@
         },
         {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "12"
+          "value": "16"
         },
         {
           "action_type": "onsite_conversion.post_net_save",
           "value": "2"
         },
         {
+          "action_type": "lead",
+          "value": "1"
+        },
+        {
+          "action_type": "offsite_content_view_add_meta_leads",
+          "value": "1"
+        },
+        {
+          "action_type": "onsite_conversion.lead_grouped",
+          "value": "1"
+        },
+        {
           "action_type": "video_view",
-          "value": "643"
+          "value": "861"
         },
         {
           "action_type": "post_reaction",
-          "value": "12"
+          "value": "16"
         }
       ],
       "date_start": "2026-02-27",
@@ -32095,12 +32127,12 @@
       "campaign_name": "29/10/25_GENERALOCT_FORM",
       "adset_id": "120235404008410101",
       "adset_name": "ABIERTO",
-      "impressions": "900",
-      "clicks": "15",
-      "spend": "11182",
-      "cpm": "12424.444444",
-      "ctr": "1.666667",
-      "reach": "809",
+      "impressions": "1176",
+      "clicks": "18",
+      "spend": "14540",
+      "cpm": "12363.945578",
+      "ctr": "1.530612",
+      "reach": "1048",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32116,15 +32148,15 @@
         },
         {
           "action_type": "link_click",
-          "value": "9"
+          "value": "13"
         },
         {
           "action_type": "page_engagement",
-          "value": "218"
+          "value": "293"
         },
         {
           "action_type": "post_engagement",
-          "value": "218"
+          "value": "293"
         },
         {
           "action_type": "post_interaction_gross",
@@ -32168,7 +32200,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "207"
+          "value": "278"
         },
         {
           "action_type": "post_reaction",
@@ -32182,16 +32214,20 @@
       "campaign_name": "31/10/25_RECON_MENSAJESIG",
       "adset_id": "120235534280500101",
       "adset_name": "ABIERTO",
-      "impressions": "4301",
-      "clicks": "41",
-      "spend": "3885",
-      "cpm": "903.278307",
-      "ctr": "0.953267",
-      "reach": "4214",
+      "impressions": "6887",
+      "clicks": "58",
+      "spend": "6282",
+      "cpm": "912.153332",
+      "ctr": "0.842166",
+      "reach": "6756",
       "actions": [
         {
+          "action_type": "link_click",
+          "value": "1"
+        },
+        {
           "action_type": "page_engagement",
-          "value": "560"
+          "value": "862"
         },
         {
           "action_type": "onsite_conversion.post_unlike",
@@ -32199,7 +32235,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "560"
+          "value": "862"
         },
         {
           "action_type": "post_interaction_gross",
@@ -32215,7 +32251,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "557"
+          "value": "858"
         },
         {
           "action_type": "post_reaction",
@@ -32229,20 +32265,20 @@
       "campaign_name": "31/10/25_TRAF_IG",
       "adset_id": "120235535034180101",
       "adset_name": "ABIERTO",
-      "impressions": "993",
-      "clicks": "69",
-      "spend": "4731",
-      "cpm": "4764.350453",
-      "ctr": "6.94864",
-      "reach": "953",
+      "impressions": "1356",
+      "clicks": "93",
+      "spend": "6428",
+      "cpm": "4740.412979",
+      "ctr": "6.858407",
+      "reach": "1322",
       "actions": [
         {
           "action_type": "link_click",
-          "value": "69"
+          "value": "94"
         },
         {
           "action_type": "page_engagement",
-          "value": "531"
+          "value": "729"
         },
         {
           "action_type": "landing_page_view",
@@ -32258,11 +32294,11 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "531"
+          "value": "729"
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "8"
+          "value": "9"
         },
         {
           "action_type": "onsite_conversion.post_save",
@@ -32270,7 +32306,7 @@
         },
         {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "5"
+          "value": "6"
         },
         {
           "action_type": "onsite_conversion.post_net_save",
@@ -32278,11 +32314,11 @@
         },
         {
           "action_type": "video_view",
-          "value": "454"
+          "value": "626"
         },
         {
           "action_type": "post_reaction",
-          "value": "7"
+          "value": "8"
         }
       ],
       "date_start": "2026-02-27",
@@ -32292,40 +32328,40 @@
       "campaign_name": "18/11/25_CP_PRUEBACA_FORM",
       "adset_id": "120236564998860101",
       "adset_name": "ABIERTO V1",
-      "impressions": "1640",
-      "clicks": "81",
-      "spend": "43046",
-      "cpm": "26247.560976",
-      "ctr": "4.939024",
-      "reach": "1440",
+      "impressions": "2504",
+      "clicks": "124",
+      "spend": "63690",
+      "cpm": "25435.303514",
+      "ctr": "4.952077",
+      "reach": "2134",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "offsite_complete_registration_add_meta_leads",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "link_click",
-          "value": "62"
+          "value": "96"
         },
         {
           "action_type": "page_engagement",
-          "value": "480"
+          "value": "746"
         },
         {
           "action_type": "landing_page_view",
-          "value": "1"
+          "value": "3"
         },
         {
           "action_type": "omni_landing_page_view",
-          "value": "1"
+          "value": "3"
         },
         {
           "action_type": "post_engagement",
-          "value": "480"
+          "value": "746"
         },
         {
           "action_type": "comment",
@@ -32333,51 +32369,55 @@
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "9"
+          "value": "14"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
-          "value": "5"
+          "value": "9"
+        },
+        {
+          "action_type": "post",
+          "value": "1"
         },
         {
           "action_type": "onsite_conversion.post_save",
-          "value": "1"
+          "value": "2"
         },
         {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "7"
+          "value": "10"
         },
         {
           "action_type": "onsite_conversion.post_net_save",
-          "value": "1"
+          "value": "2"
         },
         {
           "action_type": "onsite_conversion.messaging_first_reply",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "lead",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "offsite_content_view_add_meta_leads",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "onsite_conversion.messaging_conversation_started_7d",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "onsite_conversion.lead_grouped",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "video_view",
-          "value": "409"
+          "value": "636"
         },
         {
           "action_type": "post_reaction",
-          "value": "7"
+          "value": "10"
         }
       ],
       "date_start": "2026-02-27",
@@ -32387,36 +32427,40 @@
       "campaign_name": "22/11/25_TRAFGRAL_WEB",
       "adset_id": "120236829248630101",
       "adset_name": "SEMI ABIERTO",
-      "impressions": "1020",
-      "clicks": "208",
-      "spend": "5022",
-      "cpm": "4923.529412",
-      "ctr": "20.392157",
-      "reach": "945",
+      "impressions": "1498",
+      "clicks": "306",
+      "spend": "7285",
+      "cpm": "4863.150868",
+      "ctr": "20.427236",
+      "reach": "1416",
       "actions": [
         {
           "action_type": "link_click",
-          "value": "167"
+          "value": "252"
         },
         {
           "action_type": "page_engagement",
-          "value": "365"
+          "value": "565"
         },
         {
           "action_type": "landing_page_view",
-          "value": "113"
+          "value": "172"
         },
         {
           "action_type": "omni_landing_page_view",
-          "value": "113"
+          "value": "172"
+        },
+        {
+          "action_type": "onsite_conversion.post_unlike",
+          "value": "1"
         },
         {
           "action_type": "post_engagement",
-          "value": "365"
+          "value": "565"
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "1"
+          "value": "2"
         },
         {
           "action_type": "onsite_conversion.post_net_like",
@@ -32424,11 +32468,11 @@
         },
         {
           "action_type": "video_view",
-          "value": "197"
+          "value": "311"
         },
         {
           "action_type": "post_reaction",
-          "value": "1"
+          "value": "2"
         }
       ],
       "date_start": "2026-02-27",
@@ -32438,12 +32482,12 @@
       "campaign_name": "14/01/26_CP_VIDEOSENE_FORM",
       "adset_id": "120239224521940101",
       "adset_name": "SEGMENTADO",
-      "impressions": "363",
-      "clicks": "8",
-      "spend": "6033",
-      "cpm": "16619.834711",
-      "ctr": "2.203857",
-      "reach": "337",
+      "impressions": "769",
+      "clicks": "14",
+      "spend": "10827",
+      "cpm": "14079.323797",
+      "ctr": "1.820546",
+      "reach": "664",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32455,19 +32499,31 @@
         },
         {
           "action_type": "link_click",
-          "value": "5"
+          "value": "8"
         },
         {
           "action_type": "page_engagement",
-          "value": "60"
+          "value": "136"
         },
         {
           "action_type": "post_engagement",
-          "value": "60"
+          "value": "136"
+        },
+        {
+          "action_type": "post_interaction_gross",
+          "value": "1"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
           "value": "2"
+        },
+        {
+          "action_type": "onsite_conversion.post_save",
+          "value": "1"
+        },
+        {
+          "action_type": "onsite_conversion.post_net_save",
+          "value": "1"
         },
         {
           "action_type": "onsite_conversion.messaging_first_reply",
@@ -32491,7 +32547,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "55"
+          "value": "127"
         }
       ],
       "date_start": "2026-02-27",
@@ -32501,12 +32557,12 @@
       "campaign_name": "04/02/26_CP_VIDEOSESTRATEGY_FORM",
       "adset_id": "120240025852200101",
       "adset_name": "SEGMENTADO",
-      "impressions": "664",
-      "clicks": "19",
-      "spend": "4993",
-      "cpm": "7519.578313",
-      "ctr": "2.861446",
-      "reach": "640",
+      "impressions": "1016",
+      "clicks": "28",
+      "spend": "7612",
+      "cpm": "7492.125984",
+      "ctr": "2.755906",
+      "reach": "990",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32518,23 +32574,27 @@
         },
         {
           "action_type": "link_click",
-          "value": "7"
+          "value": "12"
         },
         {
           "action_type": "page_engagement",
-          "value": "263"
+          "value": "395"
         },
         {
           "action_type": "post_engagement",
-          "value": "263"
+          "value": "395"
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "3"
+          "value": "6"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
           "value": "2"
+        },
+        {
+          "action_type": "post",
+          "value": "1"
         },
         {
           "action_type": "onsite_conversion.post_save",
@@ -32542,7 +32602,7 @@
         },
         {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "2"
+          "value": "4"
         },
         {
           "action_type": "onsite_conversion.post_net_save",
@@ -32570,11 +32630,11 @@
         },
         {
           "action_type": "video_view",
-          "value": "253"
+          "value": "377"
         },
         {
           "action_type": "post_reaction",
-          "value": "2"
+          "value": "4"
         }
       ],
       "date_start": "2026-02-27",
@@ -32584,12 +32644,12 @@
       "campaign_name": "04/02/26_CP_VIDEOSESTRATEGY_FORM",
       "adset_id": "120240032379790101",
       "adset_name": "ABIERTO",
-      "impressions": "684",
-      "clicks": "17",
-      "spend": "4784",
-      "cpm": "6994.152047",
-      "ctr": "2.48538",
-      "reach": "682",
+      "impressions": "830",
+      "clicks": "18",
+      "spend": "5983",
+      "cpm": "7208.433735",
+      "ctr": "2.168675",
+      "reach": "829",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32605,7 +32665,7 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "282"
+          "value": "334"
         },
         {
           "action_type": "onsite_conversion.post_unlike",
@@ -32613,7 +32673,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "282"
+          "value": "334"
         },
         {
           "action_type": "post_interaction_gross",
@@ -32657,7 +32717,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "270"
+          "value": "322"
         },
         {
           "action_type": "post_reaction",
@@ -32671,12 +32731,12 @@
       "campaign_name": "08/02/26_CP_VIDEOS_FORM PREG",
       "adset_id": "120240172544360101",
       "adset_name": "SEGMENTADO",
-      "impressions": "662",
-      "clicks": "17",
-      "spend": "5221",
-      "cpm": "7886.706949",
-      "ctr": "2.567976",
-      "reach": "607",
+      "impressions": "911",
+      "clicks": "21",
+      "spend": "6931",
+      "cpm": "7608.122942",
+      "ctr": "2.305159",
+      "reach": "889",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32684,27 +32744,35 @@
         },
         {
           "action_type": "offsite_complete_registration_add_meta_leads",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "link_click",
-          "value": "6"
+          "value": "7"
         },
         {
           "action_type": "page_engagement",
-          "value": "216"
+          "value": "323"
+        },
+        {
+          "action_type": "landing_page_view",
+          "value": "1"
+        },
+        {
+          "action_type": "omni_landing_page_view",
+          "value": "1"
         },
         {
           "action_type": "post_engagement",
-          "value": "216"
+          "value": "323"
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "5"
+          "value": "9"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "post",
@@ -32712,7 +32780,7 @@
         },
         {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "4"
+          "value": "8"
         },
         {
           "action_type": "onsite_conversion.messaging_first_reply",
@@ -32720,27 +32788,27 @@
         },
         {
           "action_type": "lead",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "offsite_content_view_add_meta_leads",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "onsite_conversion.messaging_conversation_started_7d",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "onsite_conversion.lead_grouped",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "video_view",
-          "value": "205"
+          "value": "307"
         },
         {
           "action_type": "post_reaction",
-          "value": "4"
+          "value": "8"
         }
       ],
       "date_start": "2026-02-27",
@@ -32750,12 +32818,12 @@
       "campaign_name": "13/02/26_CP_2PREGU_FORM",
       "adset_id": "120240328798710101",
       "adset_name": "SEGMENTADO",
-      "impressions": "574",
-      "clicks": "6",
-      "spend": "5123",
-      "cpm": "8925.087108",
-      "ctr": "1.045296",
-      "reach": "557",
+      "impressions": "761",
+      "clicks": "9",
+      "spend": "6954",
+      "cpm": "9137.976347",
+      "ctr": "1.182654",
+      "reach": "724",
       "actions": [
         {
           "action_type": "link_click",
@@ -32763,15 +32831,27 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "144"
+          "value": "184"
         },
         {
           "action_type": "post_engagement",
-          "value": "144"
+          "value": "184"
+        },
+        {
+          "action_type": "post_interaction_gross",
+          "value": "2"
+        },
+        {
+          "action_type": "onsite_conversion.post_net_like",
+          "value": "2"
         },
         {
           "action_type": "video_view",
-          "value": "141"
+          "value": "179"
+        },
+        {
+          "action_type": "post_reaction",
+          "value": "2"
         }
       ],
       "date_start": "2026-02-27",
@@ -32781,12 +32861,12 @@
       "campaign_name": "24/02/26_CP_1CA1A_FORM",
       "adset_id": "120240737830100101",
       "adset_name": "ABIERTO",
-      "impressions": "1060",
-      "clicks": "16",
-      "spend": "5365",
-      "cpm": "5061.320755",
-      "ctr": "1.509434",
-      "reach": "1003",
+      "impressions": "1464",
+      "clicks": "24",
+      "spend": "7360",
+      "cpm": "5027.322404",
+      "ctr": "1.639344",
+      "reach": "1396",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32802,15 +32882,15 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "176"
+          "value": "253"
         },
         {
           "action_type": "post_engagement",
-          "value": "176"
+          "value": "253"
         },
         {
           "action_type": "post_interaction_gross",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
@@ -32818,7 +32898,7 @@
         },
         {
           "action_type": "onsite_conversion.post_net_like",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "onsite_conversion.messaging_first_reply",
@@ -32846,11 +32926,11 @@
         },
         {
           "action_type": "video_view",
-          "value": "167"
+          "value": "243"
         },
         {
           "action_type": "post_reaction",
-          "value": "3"
+          "value": "4"
         }
       ],
       "date_start": "2026-02-27",
@@ -32860,12 +32940,12 @@
       "campaign_name": "24/02/26_CP_1CA1A_FORM",
       "adset_id": "120240737964920101",
       "adset_name": "ABIERTO",
-      "impressions": "196",
-      "clicks": "3",
-      "spend": "3927",
-      "cpm": "20035.714286",
-      "ctr": "1.530612",
-      "reach": "187",
+      "impressions": "268",
+      "clicks": "6",
+      "spend": "5273",
+      "cpm": "19675.373134",
+      "ctr": "2.238806",
+      "reach": "255",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32877,15 +32957,15 @@
         },
         {
           "action_type": "link_click",
-          "value": "3"
+          "value": "6"
         },
         {
           "action_type": "page_engagement",
-          "value": "51"
+          "value": "73"
         },
         {
           "action_type": "post_engagement",
-          "value": "51"
+          "value": "73"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
@@ -32913,7 +32993,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "48"
+          "value": "67"
         }
       ],
       "date_start": "2026-02-27",
@@ -32923,12 +33003,12 @@
       "campaign_name": "24/02/26_CP_1CA1A_FORM",
       "adset_id": "120240737982180101",
       "adset_name": "ABIERTO",
-      "impressions": "504",
-      "clicks": "6",
-      "spend": "3999",
-      "cpm": "7934.52381",
-      "ctr": "1.190476",
-      "reach": "485",
+      "impressions": "645",
+      "clicks": "8",
+      "spend": "5002",
+      "cpm": "7755.03876",
+      "ctr": "1.24031",
+      "reach": "607",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -32940,11 +33020,11 @@
         },
         {
           "action_type": "link_click",
-          "value": "3"
+          "value": "4"
         },
         {
           "action_type": "page_engagement",
-          "value": "69"
+          "value": "85"
         },
         {
           "action_type": "landing_page_view",
@@ -32956,7 +33036,7 @@
         },
         {
           "action_type": "post_engagement",
-          "value": "69"
+          "value": "85"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
@@ -32984,7 +33064,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "66"
+          "value": "81"
         }
       ],
       "date_start": "2026-02-27",
@@ -32994,12 +33074,12 @@
       "campaign_name": "24/02/26_CP_1CA1A_FORM",
       "adset_id": "120240738002290101",
       "adset_name": "ABIERTO",
-      "impressions": "398",
-      "clicks": "7",
-      "spend": "3568",
-      "cpm": "8964.824121",
-      "ctr": "1.758794",
-      "reach": "361",
+      "impressions": "558",
+      "clicks": "8",
+      "spend": "5077",
+      "cpm": "9098.566308",
+      "ctr": "1.433692",
+      "reach": "494",
       "actions": [
         {
           "action_type": "onsite_conversion.total_messaging_connection",
@@ -33015,15 +33095,31 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "137"
+          "value": "184"
         },
         {
           "action_type": "post_engagement",
-          "value": "137"
+          "value": "184"
+        },
+        {
+          "action_type": "post_interaction_gross",
+          "value": "2"
         },
         {
           "action_type": "offsite_search_add_meta_leads",
           "value": "2"
+        },
+        {
+          "action_type": "onsite_conversion.post_save",
+          "value": "1"
+        },
+        {
+          "action_type": "onsite_conversion.post_net_like",
+          "value": "1"
+        },
+        {
+          "action_type": "onsite_conversion.post_net_save",
+          "value": "1"
         },
         {
           "action_type": "onsite_conversion.messaging_first_reply",
@@ -33047,7 +33143,11 @@
         },
         {
           "action_type": "video_view",
-          "value": "135"
+          "value": "180"
+        },
+        {
+          "action_type": "post_reaction",
+          "value": "1"
         }
       ],
       "date_start": "2026-02-27",
@@ -33057,12 +33157,12 @@
       "campaign_name": "24/02/26_CP_1CA1A_FORM",
       "adset_id": "120240738016130101",
       "adset_name": "ABIERTO",
-      "impressions": "327",
+      "impressions": "460",
       "clicks": "5",
-      "spend": "3251",
-      "cpm": "9941.896024",
-      "ctr": "1.529052",
-      "reach": "292",
+      "spend": "4483",
+      "cpm": "9745.652174",
+      "ctr": "1.086957",
+      "reach": "413",
       "actions": [
         {
           "action_type": "link_click",
@@ -33070,11 +33170,11 @@
         },
         {
           "action_type": "page_engagement",
-          "value": "114"
+          "value": "157"
         },
         {
           "action_type": "post_engagement",
-          "value": "114"
+          "value": "157"
         },
         {
           "action_type": "post_interaction_gross",
@@ -33086,7 +33186,7 @@
         },
         {
           "action_type": "video_view",
-          "value": "109"
+          "value": "152"
         },
         {
           "action_type": "post_reaction",
@@ -33100,28 +33200,28 @@
       "campaign_name": "24/02/26_CP_BESTSELLER_FORMVERIF",
       "adset_id": "120240738490890101",
       "adset_name": "SEGMENTADO",
-      "impressions": "369",
-      "clicks": "10",
-      "spend": "5243",
-      "cpm": "14208.672087",
-      "ctr": "2.710027",
-      "reach": "368",
+      "impressions": "495",
+      "clicks": "14",
+      "spend": "6690",
+      "cpm": "13515.151515",
+      "ctr": "2.828283",
+      "reach": "492",
       "actions": [
         {
           "action_type": "link_click",
-          "value": "5"
+          "value": "6"
         },
         {
           "action_type": "page_engagement",
-          "value": "101"
+          "value": "139"
         },
         {
           "action_type": "post_engagement",
-          "value": "101"
+          "value": "139"
         },
         {
           "action_type": "video_view",
-          "value": "96"
+          "value": "133"
         }
       ],
       "date_start": "2026-02-27",
